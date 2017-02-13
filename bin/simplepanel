@@ -111,6 +111,17 @@ sp_bspwm_status()
     COMMAND_3="bspc desktop -f last" ;          # focus last focused desktop
     COMMAND_4="bspc desktop -f " ;              # focus desktop
     COMMAND_5="bspc desktop -l next" ;          # switch to the next layout (tiling or monocle)
+
+    i=10 ;
+    while ! bspc wm -g > /dev/null && [ $i -gt 0 ] ; do  # wait while bspwm starts
+        sleep 0.5 ;
+        i=$(($i-1)) ;
+    done ;
+    if [ $i -eq 0 ] ; then
+        echo "no bspwm" ;
+        exit ;              # exit if bspwm does not respond
+    fi ;
+
 	bspc subscribe \
 	| {	IFS=':' ;
         while read line ; do
