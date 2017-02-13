@@ -1,1 +1,228 @@
-#!/bin/dash
+#! /bin/dash
+#
+# simplepanel
+#
+# Simple panel script for bspwm with lemonbar
+# Inspired by limepanel https://github.com/Chrysostomus/limepanel
+# Dash version
+
+# Kill any older panel processes
+
+while [ $(pgrep -cx simplepanel) -gt 1 ] ; do pkill -ox -9 simplepanel ; done ;
+while [ $(pgrep -cx lemonbar) -gt 1 ] ; do pkill -ox -9 lemonbar ; done ;
+while [ $(pgrep -cx xtitle) -gt 1 ] ; do pkill -ox -9 xtitle ; done ;
+
+# Set size and position
+
+SP_WIDTH=
+SP_HEIGHT=28
+SP_POSITION=
+
+# Set fonts
+
+SP_FONT_1="mono:size=12" # main font
+SP_OFFSET_1=-6
+
+SP_FONT_2="Symbola:size=22" # font for "icons"
+SP_OFFSET_2=2
+
+SP_FONT_3="UnifontUpper:size=12" # fallback font
+SP_OFFSET_3=-6
+
+# Set colors
+
+SP_BG_COLOR="#FFEFF0F1"     # default background color
+SP_BG_COLOR_1="#FF3DAEE9"   # alternative background color
+
+SP_FG_COLOR="#FF101010"     # default foreground color
+SP_FG_COLOR_1="#FFB6B8BA"   # alternative foreground color 1
+SP_FG_COLOR_2="#FF5C616C"   # alternative foreground color 2
+
+# Set lemonbar format codes. See more at https://github.com/LemonBoy/bar
+
+BC="%{B-}"                  # use default background color
+BC1="%{B$SP_BG_COLOR_1}"    # use alternative background color
+
+FC="%{F-}"                  # use default foreground color
+FC1="%{F$SP_FG_COLOR_1}"    # use alternative foreground color 1
+FC2="%{F$SP_FG_COLOR_2}"    # use alternative foreground color 2
+
+LEFT="%{c}"                 # left text alignment
+CENTER="%{c}"               # center text alignment
+RIGHT="%{r}"                # right text alignment
+
+SEPARATOR="$FC1│$FC"
+
+# Set update interval (in seconds) for clock, wifi etc.
+
+UPD_INT=3
+
+# Set panel structure
+# Provide a string with a list of panel modules (blocks)
+# Separate module names by spaces or newlines
+# Modules will appear on the panel in the given order
+# Add your own modules as you wish
+
+sp_modules="
+sp_main_menu
+sp_separator
+sp_bspwm_status
+sp_separator
+sp_center
+sp_window_title
+sp_right
+sp_separator
+sp_wifi
+sp_separator
+sp_clock
+"
+
+# Module definitions
+# If contents of a module do not change (button, separator, etc.) it should print one line and exit
+# If contents of a module change (window title, clock, etc.) it should print one line for every new value
+# The panel updates every time a module prints a line
+# Write your own modules as wou wish
+
+sp_main_menu()
+{
+    COMMAND='morc_menu'
+	echo "$FC2%{A:$COMMAND:}☰"'%{A}'"$FC" ;
+}
+
+sp_separator()
+{
+	echo "$SEPARATOR" ;
+}
+
+sp_center()
+{
+	echo "$CENTER" ;
+}
+
+sp_right()
+{
+	echo "$RIGHT" ;
+}
+
+sp_bspwm_status()
+{
+    COMMAND_1="bspc desktop -f next.occupied" ; # focus next occupied desktop
+    COMMAND_2="bspc desktop -f prev.occupied" ; # focus previous occupied desktop
+    COMMAND_3="bspc desktop -f last" ;          # focus last focused desktop
+    COMMAND_4="bspc desktop -f " ;              # focus desktop
+    COMMAND_5="bspc desktop -l next" ;          # switch to the next layout (tiling or monocle)
+	bspc subscribe \
+	| {	IFS=':' ;
+        while read line ; do
+    	    printf "%s" "%{A4:$COMMAND_1:}%{A5:$COMMAND_2:}" ; # mouse wheel to switch desktops
+		    set -- $line ;
+		    while [ $# -gt 0 ] ; do
+		        desktop="${1#?}"
+			    case $1 in
+				    O*|F*|U*)   # highlight focused desktop (occupied, free or urgent)
+					    printf "%s%s %s %s%s" "$BC1" "%{A:$COMMAND_3:}" "$desktop" "%{A}" "$BC" ;;
+				    o*|u*)      # show unfocused desktops (occupied or urgent)
+					    printf "%s %s %s" "%{A:$COMMAND_4$desktop:}" "$desktop" "%{A}" ;;
+				    L*)         # show current layout (tiling or monocle)
+					    printf "%s %s %s" "%{A:$COMMAND_5:}" "$desktop" "%{A}" ;;
+			    esac ;
+			    shift ;
+		    done ;
+		    printf "%s\n" "%{A5}%{A4}" ;
+	    done ;
+    }
+}
+
+sp_window_title()
+{
+    COMMAND="MonocleSwitcher"
+	xtitle -s -t -40 -f "%{A:$COMMAND:}%s%{A}\n" ;
+}
+
+sp_clock()
+{
+	while date '+%R ' ; do
+		sleep "$UPD_INT" ;
+	done ;
+}
+
+sp_wifi()
+{
+    COMMAND="terminal -e nmtui" ; # run network manager UI
+    
+	WIFI_INT="$(ip link show | awk '/state UP/ {print substr($2, 1, length($2)-1)}')" # wireless interface name
+
+	while true; do
+	    printf "%s" "%{A:$COMMAND:}" ;
+		if		[ -d /sys/class/net/${WIFI_INT}/wireless ] \
+			&&	[ "$(cat /sys/class/net/$WIFI_INT/operstate)" != 'down' ] ; \
+			then
+				WIFI_QUALITY=$(awk 'NR==3 {print int($3 * 100 / 70)}' /proc/net/wireless) ;
+				WIFI_NAME=$(nmcli -t -c no -f name c show --active) ;
+				printf "%s%% %s" "$WIFI_QUALITY" "$WIFI_NAME" ;
+			else
+				printf "no wifi" ;
+		fi ;
+		   printf "%s\n" "%{A}" ;
+	sleep "$UPD_INT" ;
+	done ;
+}
+
+##########
+## MAIN ##
+##########
+
+#### INITIALIZE PANEL ####
+
+sp_values="" ;
+for module in $sp_modules ; do      # set initial values
+	sp_values="$sp_values\n" ;      # one line for each module
+done ;
+i=0 ;
+for module in $sp_modules ; do      # start modules
+	"$module" \
+	| { IFS="\n" ;                  # needed to preserve initial and final spaces
+		while read line ; do 
+			printf "%s/%s\n" "$i" "$line" ; # add module index to the line
+		done ;
+	} &                             # spawn processes for modules
+	i=$(($i+1)) ;
+done \
+| { 
+
+#### UPDATE PANEL ####
+
+	IFS="\n" ;                  # needed to preserve initial and final spaces
+	while read line ; do        # update panel every time a module prints a line
+		index="${line%%/*}" ;   # get index of module that needs update
+		i=0 ;
+		sp_values_new="" ;
+		while [ -n "$sp_values" ] ; do              # read stored set of values
+			if [ $i -eq $index ] ; then
+				value="$line" ;                     # replace appropriate value
+				else
+				value="${sp_values%%\\n*}" ;        # keep all other values
+			fi
+			sp_values="${sp_values#*\\n}" ;         # remove old value
+			sp_values_new="$sp_values_new$value\n" ; # store new value
+			value="${value#*/}" ;                   # remove index from line
+			printf "%s" "${value}" ;                # print new value
+			i=$(($i+1)) ;
+		done ;
+		printf "\n" ;                   # end the line to update lemonbar
+		sp_values="$sp_values_new" ;    # replace old set of values with new
+		sleep 0.01 ;                    # a delay needed for smooth updates
+	done ;
+} | lemonbar \
+	-g ${SP_WIDTH}x${SP_HEIGHT}${SP_POSITION} \
+	-f "$SP_FONT_1" \
+	-o "$SP_OFFSET_1" \
+	-f "$SP_FONT_2" \
+	-o "$SP_OFFSET_2" \
+	-f "$SP_FONT_3" \
+	-o "$SP_OFFSET_3" \
+	-B "$SP_BG_COLOR" \
+	-F "$SP_FG_COLOR" \
+| while read line; do eval "$line"; done; # execute commands for clickable areas of lemonbar
+
+wait
