@@ -158,7 +158,7 @@ sp_wifi()
 			&&	[ "$(cat /sys/class/net/$WIFI_INT/operstate)" != 'down' ] ; \
 			then
 				WIFI_QUALITY=$(awk 'NR==3 {print int($3 * 100 / 70)}' /proc/net/wireless) ;
-				WIFI_NAME=$(nmcli -t -c no -f name c show --active) ;
+				WIFI_NAME=$(iwgetid -r) ;
 				printf "%s%% %s" "$WIFI_QUALITY" "$WIFI_NAME" ;
 			else
 				printf "no wifi" ;
