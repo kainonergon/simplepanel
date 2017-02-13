@@ -1,1 +1,1 @@
-## Simplepanel - lightweight modular panel wor bspwm
+## Simplepanel - lightweight modular panel for bspwm
