@@ -161,9 +161,8 @@ sp_wifi()
 {
     COMMAND="terminal -e nmtui" ; # run network manager UI
     
-	WIFI_INT="$(ip link show | awk '/state UP/ {print substr($2, 1, length($2)-1)}')" # wireless interface name
-
 	while true; do
+    	WIFI_INT="$(ip link show | awk '/state UP/ {print substr($2, 1, length($2)-1)}')" # wireless interface name
 	    printf "%s" "%{A:$COMMAND:}" ;
 		if		[ -d /sys/class/net/${WIFI_INT}/wireless ] \
 			&&	[ "$(cat /sys/class/net/$WIFI_INT/operstate)" != 'down' ] ; \
