@@ -33,7 +33,7 @@ SP_POSITION=
 SP_FONT_1="xos4Terminus:pixelsize=18" # main font
 SP_OFFSET_1=-6
 
-SP_FONT_2="Symbola:size=22" # font for "icons"
+SP_FONT_2="Symbola:pixelsize=30" # font for "icons"
 SP_OFFSET_2=2
 
 SP_FONT_3="mono:size=12" # fallback font
@@ -122,9 +122,11 @@ sp_window_title()
 
 sp_clock()
 {
-	while date '+%R ' ; do
-		sleep "$UPD_INT" ;
-	done ;
+    while true ; do
+        printf "%s" "$FC2%{T2}⏰$FC%{T-} " ;
+        date '+%R ' ;
+        sleep "$UPD_INT" ;
+    done ;
 }
 
 sp_bspwm_status()
@@ -179,7 +181,15 @@ sp_wifi()
 			then
 				WIFI_QUALITY=$(awk 'NR==3 {print int($3 * 100 / 70)}' /proc/net/wireless) ;
 				WIFI_NAME=$(iwgetid -r) ;
-				printf "%s%% %s" "$WIFI_QUALITY" "$WIFI_NAME" ;
+				case $(( $WIFI_QUALITY / 10 )) in 
+				    0)      WIFI_BARS="▁▁▁▁" ;;
+				    1|2)    WIFI_BARS="▂▁▁▁" ;;
+				    3|4)    WIFI_BARS="▂▄▁▁" ;;
+				    5|6)    WIFI_BARS="▂▄▆▁" ;;
+				    7|8)    WIFI_BARS="▂▄▆▁" ;;
+				    9|10)   WIFI_BARS="▂▄▆█" ;;
+				esac ;
+				printf "%s %s%% %s" "$FC2$WIFI_BARS$FC" "$WIFI_QUALITY" "$WIFI_NAME" ;
 			else
 				printf "no wifi" ;
 		fi ;
