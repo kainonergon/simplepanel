@@ -30,13 +30,16 @@ SP_POSITION=
 
 # Set fonts
 
-SP_FONT_1="xos4Terminus:pixelsize=18" # main font
+SP_FONT_1="xos4 Terminus:pixelsize=18" # main font - with xft
+# SP_FONT_1='-xos4-terminus-medium-r-normal--18-*-*-*-*-*-iso10646-1' # main font - without xft
 SP_OFFSET_1=-6
 
-SP_FONT_2="Symbola:pixelsize=30" # font for "icons"
+SP_FONT_2="Symbola:pixelsize=30" # font for "icons" - with xft
+# SP_FONT_2='-misc-symbola-medium-r-semicondensed--30-*-*-*-*-*-iso10646-1' # font for "icons" - without xft
 SP_OFFSET_2=2
 
-SP_FONT_3="mono:size=12" # fallback font
+SP_FONT_3="mono:pixelsize=18" # fallback font - with xft
+# SP_FONT_3='-misc-dejavu sans mono-medium-r-normal--18-*-*-*-*-*-iso10646-1' # fallback font - without xft
 SP_OFFSET_3=-6
 
 # Set colors
@@ -54,10 +57,10 @@ UPD_INT=3
 
 # Set lemonbar format codes. See more at https://github.com/LemonBoy/bar
 
-BC="%{B-}"                  # use default background color
+BC='%{B-}'                  # use default background color
 BC1="%{B$SP_BG_COLOR_1}"    # use alternative background color
 
-FC="%{F-}"                  # use default foreground color
+FC='%{F-}'                  # use default foreground color
 FC1="%{F$SP_FG_COLOR_1}"    # use alternative foreground color 1
 FC2="%{F$SP_FG_COLOR_2}"    # use alternative foreground color 2
 
@@ -95,8 +98,10 @@ sp_clock
 
 sp_main_menu()
 {
-    COMMAND="morc_menu"
-	echo "$FC2%{A:$COMMAND:}☰%{A}$FC" ;
+    COMMAND="morc_menu" ;
+    ICON="${FC2}%{T2}☰%{T1}${FC}" ;
+    
+	printf "%s%s%s\n" "%{A:$COMMAND:}" "${ICON}" "%{A}" ;
 }
 
 sp_separator()
@@ -122,8 +127,10 @@ sp_window_title()
 
 sp_clock()
 {
+    ICON="$FC2%{T2}⏰$FC%{T1}" ;
+    
     while true ; do
-        printf "%s" "$FC2%{T2}⏰$FC%{T-} " ;
+        printf "%s" "$ICON" ;
         date '+%R ' ;
         sleep "$UPD_INT" ;
     done ;
@@ -248,7 +255,7 @@ done \
 		sleep 0.01 ;                    # a delay needed for smooth updates
 	done ;
 } | lemonbar \
-	-g ${SP_WIDTH}x${SP_HEIGHT}${SP_POSITION} \
+	-g "${SP_WIDTH}x${SP_HEIGHT}${SP_POSITION}" \
 	-f "$SP_FONT_1" \
 	-o "$SP_OFFSET_1" \
 	-f "$SP_FONT_2" \
@@ -257,6 +264,7 @@ done \
 	-o "$SP_OFFSET_3" \
 	-B "$SP_BG_COLOR" \
 	-F "$SP_FG_COLOR" \
-| while read line; do eval "$line"; done; # execute commands for clickable areas of lemonbar
+| while read line ; do eval "$line" ; done ; # execute commands for clickable areas of lemonbar
 
-wait
+wait ;
+
