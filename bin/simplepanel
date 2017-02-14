@@ -32,15 +32,15 @@ SP_POSITION=
 
 SP_FONT_1="xos4 Terminus:pixelsize=18" # main font - with xft
 # SP_FONT_1='-xos4-terminus-medium-r-normal--18-*-*-*-*-*-iso10646-1' # main font - without xft
-SP_OFFSET_1=-6
+SP_OFFSET_1=-5
 
-SP_FONT_2="Symbola:pixelsize=30" # font for "icons" - with xft
-# SP_FONT_2='-misc-symbola-medium-r-semicondensed--30-*-*-*-*-*-iso10646-1' # font for "icons" - without xft
-SP_OFFSET_2=2
+SP_FONT_2="Ionicons:pixelsize=27" # font for "icons" - with xft
+# SP_FONT_2='-misc-ionicons-medium-r-normal--25-*-*-*-*-*-iso10646-1' # font for "icons" - without xft
+SP_OFFSET_2=0
 
 SP_FONT_3="mono:pixelsize=18" # fallback font - with xft
 # SP_FONT_3='-misc-dejavu sans mono-medium-r-normal--18-*-*-*-*-*-iso10646-1' # fallback font - without xft
-SP_OFFSET_3=-6
+SP_OFFSET_3=-5
 
 # Set colors
 
@@ -50,6 +50,7 @@ SP_BG_COLOR_1="#FF3DAEE9"   # alternative background color
 SP_FG_COLOR="#FF101010"     # default foreground color
 SP_FG_COLOR_1="#FFB6B8BA"   # alternative foreground color 1
 SP_FG_COLOR_2="#FF5C616C"   # alternative foreground color 2
+SP_FG_COLOR_URGENT="red"
 
 # Set update interval (in seconds) for clock, wifi etc.
 
@@ -87,6 +88,8 @@ sp_right
 sp_separator
 sp_wifi
 sp_separator
+sp_battery
+sp_separator
 sp_clock
 "
 
@@ -99,9 +102,9 @@ sp_clock
 sp_main_menu()
 {
     COMMAND="morc_menu" ;
-    ICON="${FC2}%{T2}☰%{T1}${FC}" ;
+    ICON="${FC2}%{T2}%{T1}${FC}" ;
     
-	printf "%s%s%s\n" "%{A:$COMMAND:}" "${ICON}" "%{A}" ;
+	printf "%s %s %s\n" "%{A:$COMMAND:}" "${ICON}" "%{A}" ;
 }
 
 sp_separator()
@@ -127,10 +130,10 @@ sp_window_title()
 
 sp_clock()
 {
-    ICON="$FC2%{T2}⏰$FC%{T1}" ;
+    ICON="$FC2%{T2}$FC%{T1}" ;
     
     while true ; do
-        printf "%s" "$ICON" ;
+        printf "%s " "$ICON" ;
         date '+%R ' ;
         sleep "$UPD_INT" ;
     done ;
@@ -203,6 +206,34 @@ sp_wifi()
 		   printf "%s\n" "%{A}" ;
 	sleep "$UPD_INT" ;
 	done ;
+}
+
+sp_battery()
+{
+    ICON_1="$FC2%{T2}%{T1}$FC" ;
+    ICON_2="$FC2%{T2}%{T1}$FC" ;
+    ICON_3="$FC2%{T2}%{T1}$FC" ;
+    ICON_4="%{F$SP_FG_COLOR_URGENT}%{T2}%{T1}$FC" ;
+    
+    if !  [ -d /sys/class/power_supply/BAT* ] ; then
+        echo "no battery" ;
+        exit ;
+    fi ;
+    
+    while true ; do
+        BAT_CAP="$(cat /sys/class/power_supply/BAT*/capacity)" ;
+        BAT_STAT="$(cat /sys/class/power_supply/BAT*/status)" ;
+	    if [ "$BAT_STAT" = "Charging" ] ; then
+		    echo "$ICON_1 $BAT_CAP%"
+	    else 
+		    case "$BAT_CAP" in
+		        100|[7-9]*) echo "$ICON_2 $BAT_CAP%" ;;
+		        [4-6]*)     echo "$ICON_3 $BAT_CAP%" ;;
+		        *)          echo "$ICON_4 $BAT_CAP%" ;;
+		    esac ;
+	    fi ;
+	    sleep $UPD_INT ;
+    done ;
 }
 _EOF_
 fi ;
