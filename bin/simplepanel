@@ -12,6 +12,16 @@ while [ $(pgrep -cx simplepanel) -gt 1 ] ; do pkill -ox -9 simplepanel ; done ;
 while [ $(pgrep -cx lemonbar) -gt 1 ] ; do pkill -ox -9 lemonbar ; done ;
 while [ $(pgrep -cx xtitle) -gt 1 ] ; do pkill -ox -9 xtitle ; done ;
 
+if ! [ -f "$HOME/.simplepanelrc" ] || [ "$1" = '--reset' ] ; then       # write default configuration file
+    cat > "$HOME/.simplepanelrc"<<"_EOF_"
+#! /bin/dash
+#
+# .simplepanelrc
+#
+# Configuration for simplepanel
+# In order to reset configuration to defaults
+# delete this file or use --reset option
+
 # Set size and position
 
 SP_WIDTH=
@@ -20,13 +30,13 @@ SP_POSITION=
 
 # Set fonts
 
-SP_FONT_1="mono:size=12" # main font
+SP_FONT_1="xos4Terminus:pixelsize=18" # main font
 SP_OFFSET_1=-6
 
 SP_FONT_2="Symbola:size=22" # font for "icons"
 SP_OFFSET_2=2
 
-SP_FONT_3="UnifontUpper:size=12" # fallback font
+SP_FONT_3="mono:size=12" # fallback font
 SP_OFFSET_3=-6
 
 # Set colors
@@ -37,6 +47,10 @@ SP_BG_COLOR_1="#FF3DAEE9"   # alternative background color
 SP_FG_COLOR="#FF101010"     # default foreground color
 SP_FG_COLOR_1="#FFB6B8BA"   # alternative foreground color 1
 SP_FG_COLOR_2="#FF5C616C"   # alternative foreground color 2
+
+# Set update interval (in seconds) for clock, wifi etc.
+
+UPD_INT=3
 
 # Set lemonbar format codes. See more at https://github.com/LemonBoy/bar
 
@@ -52,10 +66,6 @@ CENTER="%{c}"               # center text alignment
 RIGHT="%{r}"                # right text alignment
 
 SEPARATOR="$FC1│$FC"
-
-# Set update interval (in seconds) for clock, wifi etc.
-
-UPD_INT=3
 
 # Set panel structure
 # Provide a string with a list of panel modules (blocks)
@@ -81,12 +91,12 @@ sp_clock
 # If contents of a module do not change (button, separator, etc.) it should print one line and exit
 # If contents of a module change (window title, clock, etc.) it should print one line for every new value
 # The panel updates every time a module prints a line
-# Write your own modules as wou wish
+# Write your own modules as you wish
 
 sp_main_menu()
 {
-    COMMAND='morc_menu'
-	echo "$FC2%{A:$COMMAND:}☰"'%{A}'"$FC" ;
+    COMMAND="morc_menu"
+	echo "$FC2%{A:$COMMAND:}☰%{A}$FC" ;
 }
 
 sp_separator()
@@ -102,6 +112,19 @@ sp_center()
 sp_right()
 {
 	echo "$RIGHT" ;
+}
+
+sp_window_title()
+{
+    COMMAND="MonocleSwitcher"
+	xtitle -s -t -40 -f "%{A:$COMMAND:}%s%{A}\n" ;
+}
+
+sp_clock()
+{
+	while date '+%R ' ; do
+		sleep "$UPD_INT" ;
+	done ;
 }
 
 sp_bspwm_status()
@@ -144,19 +167,6 @@ sp_bspwm_status()
     }
 }
 
-sp_window_title()
-{
-    COMMAND="MonocleSwitcher"
-	xtitle -s -t -40 -f "%{A:$COMMAND:}%s%{A}\n" ;
-}
-
-sp_clock()
-{
-	while date '+%R ' ; do
-		sleep "$UPD_INT" ;
-	done ;
-}
-
 sp_wifi()
 {
     COMMAND="terminal -e nmtui" ; # run network manager UI
@@ -177,6 +187,10 @@ sp_wifi()
 	sleep "$UPD_INT" ;
 	done ;
 }
+_EOF_
+fi ;
+
+. "$HOME/.simplepanelrc" ;  # read configuration file
 
 ##########
 ## MAIN ##
