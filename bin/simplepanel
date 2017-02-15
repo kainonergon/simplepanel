@@ -32,15 +32,15 @@ SP_POSITION=
 
 SP_FONT_1="xos4 Terminus:pixelsize=18" # main font - with xft
 # SP_FONT_1='-xos4-terminus-medium-r-normal--18-*-*-*-*-*-iso10646-1' # main font - without xft
-SP_OFFSET_1=-5
+SP_OFFSET_1=-4
 
-SP_FONT_2="Ionicons:pixelsize=27" # font for "icons" - with xft
-# SP_FONT_2='-misc-ionicons-medium-r-normal--25-*-*-*-*-*-iso10646-1' # font for "icons" - without xft
+SP_FONT_2="Ionicons:pixelsize=24" # font for "icons" - with xft
+# SP_FONT_2='-misc-ionicons-medium-r-normal--24-*-*-*-*-*-iso10646-1' # font for "icons" - without xft
 SP_OFFSET_2=0
 
 SP_FONT_3="mono:pixelsize=18" # fallback font - with xft
 # SP_FONT_3='-misc-dejavu sans mono-medium-r-normal--18-*-*-*-*-*-iso10646-1' # fallback font - without xft
-SP_OFFSET_3=-5
+SP_OFFSET_3=-4
 
 # Set colors
 
@@ -54,7 +54,7 @@ SP_FG_COLOR_URGENT="red"
 
 # Set update interval (in seconds) for clock, wifi etc.
 
-UPD_INT=3
+UPD_INT=1
 
 # Set lemonbar format codes. See more at https://github.com/LemonBoy/bar
 
@@ -69,7 +69,7 @@ LEFT="%{c}"                 # left text alignment
 CENTER="%{c}"               # center text alignment
 RIGHT="%{r}"                # right text alignment
 
-SEPARATOR="$FC1│$FC"
+SEPARATOR="$FC1 ▏$FC"
 
 # Set panel structure
 # Provide a string with a list of panel modules (blocks)
@@ -90,6 +90,8 @@ sp_wifi
 sp_separator
 sp_battery
 sp_separator
+sp_backlight
+sp_separator
 sp_clock
 "
 
@@ -101,10 +103,10 @@ sp_clock
 
 sp_main_menu()
 {
+    ICON="${FC2}%{T2} %{T1}${FC}" ;
     COMMAND="morc_menu" ;
-    ICON="${FC2}%{T2}%{T1}${FC}" ;
     
-	printf "%s %s %s\n" "%{A:$COMMAND:}" "${ICON}" "%{A}" ;
+	printf "%s%s%s\n" "%{A:$COMMAND:}" "${ICON}" "%{A}" ;
 }
 
 sp_separator()
@@ -130,7 +132,7 @@ sp_window_title()
 
 sp_clock()
 {
-    ICON="$FC2%{T2}$FC%{T1}" ;
+    ICON="$FC2%{T2}$FC%{T1}" ;
     
     while true ; do
         printf "%s " "$ICON" ;
@@ -191,15 +193,14 @@ sp_wifi()
 			then
 				WIFI_QUALITY=$(awk 'NR==3 {print int($3 * 100 / 70)}' /proc/net/wireless) ;
 				WIFI_NAME=$(iwgetid -r) ;
-				case $(( $WIFI_QUALITY / 10 )) in 
-				    0)      WIFI_BARS="▁▁▁▁" ;;
-				    1|2)    WIFI_BARS="▂▁▁▁" ;;
-				    3|4)    WIFI_BARS="▂▄▁▁" ;;
-				    5|6)    WIFI_BARS="▂▄▆▁" ;;
-				    7|8)    WIFI_BARS="▂▄▆▁" ;;
-				    9|10)   WIFI_BARS="▂▄▆█" ;;
+				case $(( $WIFI_QUALITY / 20 )) in 
+				    5|4) WIFI_BARS="▂▄▆█" ;;
+				    3)   WIFI_BARS="▂▄▆_" ;;
+				    2)   WIFI_BARS="▂▄__" ;;
+				    1)   WIFI_BARS="▂___" ;;
+				    *)   WIFI_BARS="____" ;;
 				esac ;
-				printf "%s %s%% %s" "$FC2$WIFI_BARS$FC" "$WIFI_QUALITY" "$WIFI_NAME" ;
+				printf "%s %s" "$FC2$WIFI_BARS$FC" "$WIFI_NAME" ;
 			else
 				printf "no wifi" ;
 		fi ;
@@ -210,10 +211,10 @@ sp_wifi()
 
 sp_battery()
 {
-    ICON_1="$FC2%{T2}%{T1}$FC" ;
-    ICON_2="$FC2%{T2}%{T1}$FC" ;
-    ICON_3="$FC2%{T2}%{T1}$FC" ;
-    ICON_4="%{F$SP_FG_COLOR_URGENT}%{T2}%{T1}$FC" ;
+    ICON_1="$FC2%{T2}%{T1}$FC" ;                       # charging
+    ICON_2="$FC2%{T2}%{T1}$FC" ;                       # full
+    ICON_3="$FC2%{T2}%{T1}$FC" ;                       # almost full
+    ICON_4="%{F$SP_FG_COLOR_URGENT}%{T2}%{T1}$FC" ;    # almost empty
     
     if !  [ -d /sys/class/power_supply/BAT* ] ; then
         echo "no battery" ;
@@ -226,13 +227,44 @@ sp_battery()
 	    if [ "$BAT_STAT" = "Charging" ] ; then
 		    echo "$ICON_1 $BAT_CAP%"
 	    else 
-		    case "$BAT_CAP" in
-		        100|[7-9]*) echo "$ICON_2 $BAT_CAP%" ;;
-		        [4-6]*)     echo "$ICON_3 $BAT_CAP%" ;;
-		        *)          echo "$ICON_4 $BAT_CAP%" ;;
+		    case $(( $BAT_CAP / 33 )) in
+		        3|2) echo "$ICON_2 $BAT_CAP%" ;;
+		        1)   echo "$ICON_3 $BAT_CAP%" ;;
+		        *)   echo "$ICON_4 $BAT_CAP%" ;;
 		    esac ;
 	    fi ;
 	    sleep $UPD_INT ;
+    done ;
+}
+
+sp_backlight()
+{
+    ICON="$FC2%{T2}$FC%{T1}" ;
+
+    COMMAND_1="xbacklight '+12'" ;
+    COMMAND_2="xbacklight '-12'" ;
+    
+    if ! [ -d /sys/class/backlight ] ; then     # exit if no backlight is present
+        echo "no backlight" ;
+        exit ;
+    fi ;
+
+    while true ; do
+        BL_STAT="$(xbacklight -get)" ;
+        BL_STAT="${BL_STAT%%.*}" ;
+        case $(( $BL_STAT / 12 )) in
+            8) BL_BAR='█' ;;
+            7) BL_BAR='▇' ;;
+            6) BL_BAR='▆' ;;
+            5) BL_BAR='▅' ;;
+            4) BL_BAR='▄' ;;
+            3) BL_BAR='▃' ;;
+            2) BL_BAR='▂' ;;
+            1) BL_BAR='▁' ;;
+            *) BL_BAR='_' ;;
+        esac ;
+        printf "%s%s %s%s\n" "%{A4:$COMMAND_1:}%{A5:$COMMAND_2:}" "$ICON" "$FC2$BL_BAR$FC" "%{A5}%{A4}";
+        sleep $UPD_INT ;
     done ;
 }
 _EOF_
