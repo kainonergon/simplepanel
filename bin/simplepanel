@@ -32,7 +32,7 @@ SP_POSITION=
 
 SP_FONT_1="xos4 Terminus:pixelsize=18" # main font - with xft
 # SP_FONT_1='-xos4-terminus-medium-r-normal--18-*-*-*-*-*-iso10646-1' # main font - without xft
-SP_OFFSET_1=-4
+SP_OFFSET_1=-2
 
 SP_FONT_2="Ionicons:pixelsize=24" # font for "icons" - with xft
 # SP_FONT_2='-misc-ionicons-medium-r-normal--24-*-*-*-*-*-iso10646-1' # font for "icons" - without xft
@@ -40,7 +40,7 @@ SP_OFFSET_2=0
 
 SP_FONT_3="mono:pixelsize=18" # fallback font - with xft
 # SP_FONT_3='-misc-dejavu sans mono-medium-r-normal--18-*-*-*-*-*-iso10646-1' # fallback font - without xft
-SP_OFFSET_3=-4
+SP_OFFSET_3=-2
 
 # Set colors
 
