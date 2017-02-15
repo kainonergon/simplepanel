@@ -237,12 +237,20 @@ sp_battery()
     done ;
 }
 
+backlight_down()
+{
+    BL_STAT="$(xbacklight)" ;
+    if [ ${BL_STAT%%.*} -gt 5 ] ; then
+        xbacklight '-12' ; 
+    fi ;
+}
+
 sp_backlight()
 {
     ICON="$FC2%{T2}$FC%{T1}" ;
 
-    COMMAND_1="xbacklight '+12'" ;
-    COMMAND_2="xbacklight '-12'" ;
+    COMMAND_1='xbacklight "+12"' ;
+    COMMAND_2='backlight_down' ;
     
     if ! [ -d /sys/class/backlight ] ; then     # exit if no backlight is present
         echo "no backlight" ;
