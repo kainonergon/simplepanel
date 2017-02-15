@@ -215,7 +215,8 @@ sp_battery()
     ICON_2="$FC2%{T2}%{T1}$FC" ;                       # full
     ICON_3="$FC2%{T2}%{T1}$FC" ;                       # almost full
     ICON_4="%{F$SP_FG_COLOR_URGENT}%{T2}%{T1}$FC" ;    # almost empty
-    
+    ICON_5="%{F$SP_FG_COLOR_URGENT}%{T2}%{T1}$FC" ;    # empty
+   
     if !  [ -d /sys/class/power_supply/BAT* ] ; then
         echo "no battery" ;
         exit ;
@@ -227,10 +228,11 @@ sp_battery()
 	    if [ "$BAT_STAT" = "Charging" ] ; then
 		    echo "$ICON_1 $BAT_CAP%"
 	    else 
-		    case $(( $BAT_CAP / 33 )) in
-		        3|2) echo "$ICON_2 $BAT_CAP%" ;;
-		        1)   echo "$ICON_3 $BAT_CAP%" ;;
-		        *)   echo "$ICON_4 $BAT_CAP%" ;;
+		    case $(( $BAT_CAP / 30 )) in
+		        3) echo "$ICON_2 $BAT_CAP%" ;;
+		        2) echo "$ICON_3 $BAT_CAP%" ;;
+		        1) echo "$ICON_4 $BAT_CAP%" ;;
+		        *) echo "$ICON_5 $BAT_CAP%" ;;
 		    esac ;
 	    fi ;
 	    sleep $UPD_INT ;
@@ -240,7 +242,7 @@ sp_battery()
 backlight_down()
 {
     BL_STAT="$(xbacklight)" ;
-    if [ ${BL_STAT%%.*} -gt 5 ] ; then
+    if [ ${BL_STAT%%.*} -gt 5 ] ; then      # make sure backlight is not too low
         xbacklight '-12' ; 
     fi ;
 }
