@@ -30,8 +30,8 @@ SP_POSITION=
 
 # Set fonts
 
-SP_FONT_1="xos4 Terminus:pixelsize=18" # main font - with xft
-# SP_FONT_1='-xos4-terminus-medium-r-normal--18-*-*-*-*-*-iso10646-1' # main font - without xft
+# SP_FONT_1="xos4 Terminus:pixelsize=18" # main font - with xft
+SP_FONT_1='-xos4-terminus-medium-r-normal--18-*-*-*-*-*-iso10646-1' # main font - without xft
 SP_OFFSET_1=-2
 
 SP_FONT_2="Ionicons:pixelsize=24" # font for "icons" - with xft
@@ -242,8 +242,8 @@ sp_battery()
 backlight_down()
 {
     BL_STAT="$(xbacklight)" ;
-    if [ ${BL_STAT%%.*} -gt 15 ] ; then      # make sure backlight is not too low
-        xbacklight '-12' ; 
+    if [ ${BL_STAT%%.*} -gt 6 ] ; then      # make sure backlight is not too low
+        xbacklight -time 50 -steps 10 "-5" ;
     fi ;
 }
 
@@ -251,7 +251,7 @@ sp_backlight()
 {
     ICON="$FC2%{T2}$FC%{T1}" ;
 
-    COMMAND_1='xbacklight "+12"' ;
+    COMMAND_1='xbacklight -time 50 -steps 10 "+5"' ;
     COMMAND_2='backlight_down' ;
     
     if ! [ -d /sys/class/backlight ] ; then     # exit if no backlight is present
