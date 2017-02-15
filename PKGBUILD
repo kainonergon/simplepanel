@@ -8,7 +8,7 @@ arch=(any)
 url="https://github.com/kainonergon/$pkgname"
 license=('MIT')
 depends=('dash'
-    'lemonbar-xft-clicky'
+	'lemonbar-xft-clicky'
 	'ttf-ionicons'
 	'xtitle')
 optdepends=('terminus-font: default font'
