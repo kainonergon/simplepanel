@@ -6,7 +6,7 @@ pkgrel=1
 pkgdesc="Lightweight modular panel for bspwm"
 arch=(any)
 url="https://github.com/kainonergon/$pkgname"
-license=MIT
+license=('MIT')
 depends=('dash'
     'lemonbar-xft-clicky'
 	'ttf-ionicons'
