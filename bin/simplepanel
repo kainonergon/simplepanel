@@ -242,7 +242,7 @@ sp_battery()
 backlight_down()
 {
     BL_STAT="$(xbacklight)" ;
-    if [ ${BL_STAT%%.*} -gt 5 ] ; then      # make sure backlight is not too low
+    if [ ${BL_STAT%%.*} -gt 15 ] ; then      # make sure backlight is not too low
         xbacklight '-12' ; 
     fi ;
 }
