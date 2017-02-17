@@ -9,14 +9,20 @@ url="https://github.com/kainonergon/$pkgname"
 license=('MIT')
 depends=('dash'
 	'lemonbar-xft-clicky'
-	'ttf-ionicons'
-	'xtitle')
-optdepends=('terminus-font: default font'
+	'ttf-ionicons')
+optdepends=('bspwm-manjaro: window manager the panel is intended for'
+	'terminus-font: default font'
 	'morc_menu: default main menu'
-	'bspwm-manjaro: window manager the panel is intended for')
+	'wireless_tools: wifi info'
+	'xtitle: window title info')
 makedepends=('git')
 source=("git://github.com/kainonergon/$pkgname")
 md5sums=('SKIP')
+
+pkgver() {
+    cd ${srcdir}/${_pkgbase}
+    git describe --long | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
+}
 
 package () {
 	cd $srcdir/$pkgname
