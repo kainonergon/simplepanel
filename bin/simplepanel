@@ -288,31 +288,28 @@ sp_backlight()
 	done ;
 }
 
-clock_format_toggle()
+show_date_toggle()
 {
-	if [ -f "${TMP}clock_format_toggle" ] ; then
-		rm "${TMP}clock_format_toggle" ;
+	if [ -f "${TMP}show_date_toggle" ] ; then
+		rm "${TMP}show_date_toggle" ;
 	else
-		touch "${TMP}clock_format_toggle" ;
+		touch "${TMP}show_date_toggle" ;
 	fi ;
 }
 
 sp_clock_once()
 {
-	ICON="$FC2%{T2}$FC%{T1}" ;
+	ICON_CLOCK="$FC2%{T2}$FC%{T1}" ;
+	ICON_DATE="$FC2%{T2}$FC%{T1}" ;
 
-	COMMAND="clock_format_toggle"
+	COMMAND="show_date_toggle"
 
-	FORMAT_1='+%x %R' ;
-	FORMAT_2='+%R' ;
-
-	if [ -f "${TMP}clock_format_toggle" ] ; then
-		CLOCK=$(date "$FORMAT_1") ;
-	else
-		CLOCK=$(date "$FORMAT_2") ;
+	printf "%s" "%{A:$COMMAND:}" ;
+	if [ -f "${TMP}show_date_toggle" ] ; then
+		printf "%s %s%s" "$ICON_DATE" "$(date '+%x')" "$SEPARATOR" ;	# print date
 	fi ;
 
-	printf "%s%s %s %s\n" "%{A:$COMMAND:}" "$ICON" "$CLOCK" "%{A}" ;
+	printf "%s %s %s\n" "$ICON_CLOCK" "$(date '+%R')" "%{A}" ;		# print time
 }
 
 sp_clock()
