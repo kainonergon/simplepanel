@@ -57,6 +57,10 @@ SP_FG_COLOR_3="red"		# alternative foreground color 3 - urgent
 
 UPD_INT=1
 
+# Directory for temporary files
+
+TMP="/tmp/simplepanel/"
+
 # Set lemonbar format codes. See more at https://github.com/LemonBoy/bar
 
 BC='%{B-}'			# use default background color
@@ -84,8 +88,8 @@ sp_main_menu
 sp_separator
 sp_bspwm_status
 sp_separator
-sp_center
 sp_window_title
+sp_center
 sp_right
 sp_separator
 sp_status
@@ -284,13 +288,31 @@ sp_backlight()
 	done ;
 }
 
+clock_format_toggle()
+{
+	if [ -f "${TMP}clock_format_toggle" ] ; then
+		rm "${TMP}clock_format_toggle" ;
+	else
+		touch "${TMP}clock_format_toggle" ;
+	fi ;
+}
+
 sp_clock_once()
 {
 	ICON="$FC2%{T2}$FC%{T1}" ;
 
-	COMMAND="notify-send $(date '+%x %A')"
+	COMMAND="clock_format_toggle"
 
-	printf "%s%s %s %s\n" "%{A:$COMMAND:}" "$ICON" "$(date '+%R')" "%{A}" ;
+	FORMAT_1='+%x %R' ;
+	FORMAT_2='+%R' ;
+
+	if [ -f "${TMP}clock_format_toggle" ] ; then
+		CLOCK=$(date "$FORMAT_1") ;
+	else
+		CLOCK=$(date "$FORMAT_2") ;
+	fi ;
+
+	printf "%s%s %s %s\n" "%{A:$COMMAND:}" "$ICON" "$CLOCK" "%{A}" ;
 }
 
 sp_clock()
@@ -338,6 +360,10 @@ fi ;
 ##########
 
 #### INITIALIZE PANEL ####
+
+if ! [ -d "$TMP" ] ; then		# create directory for temporary files
+	mkdir "$TMP" ;
+fi ;
 
 sp_values="" ;
 for module in $sp_modules ; do		# set initial values
