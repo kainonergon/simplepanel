@@ -12,7 +12,7 @@ while [ $(pgrep -cx simplepanel) -gt 1 ] ; do pkill -ox -9 simplepanel ; done ;
 while [ $(pgrep -cx lemonbar) -gt 1 ] ; do pkill -ox -9 lemonbar ; done ;
 while [ $(pgrep -cx xtitle) -gt 1 ] ; do pkill -ox -9 xtitle ; done ;
 
-if ! [ -f "$HOME/.simplepanelrc" ] || [ "$1" = '--reset' ] ; then       # write default configuration file
+if ! [ -f "$HOME/.simplepanelrc" ] || [ "$1" = '--reset' ] ; then	# write default configuration file
     cat > "$HOME/.simplepanelrc"<<"_EOF_"
 #! /bin/dash
 #
@@ -24,33 +24,34 @@ if ! [ -f "$HOME/.simplepanelrc" ] || [ "$1" = '--reset' ] ; then       # write 
 
 # Set size and position
 
-SP_WIDTH=
+SP_WIDTH=""
 SP_HEIGHT=28
-SP_POSITION=
+SP_POSITION=""
+SP_BOTTOM=""	# if set to "-b" panel will be at the bottom of the screen, if set to "" - at the top
 
 # Set fonts
 
-# SP_FONT_1="xos4 Terminus:pixelsize=18" # main font - with xft
-SP_FONT_1='-xos4-terminus-medium-r-normal--18-*-*-*-*-*-iso10646-1' # main font - without xft
+# SP_FONT_1="xos4 Terminus:pixelsize=18"			# main font - with xft
+SP_FONT_1='-*-terminus-medium-r-*--18-*-*-*-*-*-iso10646-1'	# without xft
 SP_OFFSET_1=-2
 
-SP_FONT_2="Ionicons:pixelsize=24" # font for "icons" - with xft
-# SP_FONT_2='-misc-ionicons-medium-r-normal--24-*-*-*-*-*-iso10646-1' # font for "icons" - without xft
+SP_FONT_2="Ionicons:pixelsize=24"				# font for "icons" - with xft
+# SP_FONT_2='-*-ionicons-medium-r-*--24-*-*-*-*-*-iso10646-1'	# without xft
 SP_OFFSET_2=0
 
-SP_FONT_3="mono:pixelsize=18" # fallback font - with xft
-# SP_FONT_3='-misc-dejavu sans mono-medium-r-normal--18-*-*-*-*-*-iso10646-1' # fallback font - without xft
+SP_FONT_3="mono:pixelsize=18"					# fallback font - with xft
+# SP_FONT_3='-*-dejavu sans mono-medium-r-*--18-*-*-*-*-*-iso10646-1'	# without xft
 SP_OFFSET_3=-2
 
 # Set colors
 
-SP_BG_COLOR="#FFEFF0F1"     # default background color
-SP_BG_COLOR_1="#FF3DAEE9"   # alternative background color
+SP_BG_COLOR="#FFEFF0F1"		# default background color
+SP_BG_COLOR_1="#FF3DAEE9"	# alternative background color
 
-SP_FG_COLOR="#FF101010"     # default foreground color
-SP_FG_COLOR_1="#FFB6B8BA"   # alternative foreground color 1
-SP_FG_COLOR_2="#FF5C616C"   # alternative foreground color 2
-SP_FG_COLOR_URGENT="red"
+SP_FG_COLOR="#FF101010"		# default foreground color
+SP_FG_COLOR_1="#FFB6B8BA"	# alternative foreground color 1 - light
+SP_FG_COLOR_2="#FF5C616C"	# alternative foreground color 2 - dark
+SP_FG_COLOR_3="red"		# alternative foreground color 3 - urgent
 
 # Set update interval (in seconds) for clock, wifi etc.
 
@@ -58,16 +59,17 @@ UPD_INT=1
 
 # Set lemonbar format codes. See more at https://github.com/LemonBoy/bar
 
-BC='%{B-}'                  # use default background color
-BC1="%{B$SP_BG_COLOR_1}"    # use alternative background color
+BC='%{B-}'			# use default background color
+BC1="%{B$SP_BG_COLOR_1}"	# use alternative background color
 
-FC='%{F-}'                  # use default foreground color
-FC1="%{F$SP_FG_COLOR_1}"    # use alternative foreground color 1
-FC2="%{F$SP_FG_COLOR_2}"    # use alternative foreground color 2
+FC='%{F-}'			# use default foreground color
+FC1="%{F$SP_FG_COLOR_1}"	# use alternative foreground color 1 - light
+FC2="%{F$SP_FG_COLOR_2}"	# use alternative foreground color 2 - dark
+FC3="%{F$SP_FG_COLOR_3}"	# use alternative foreground color 3 - urgent
 
-LEFT="%{c}"                 # left text alignment
-CENTER="%{c}"               # center text alignment
-RIGHT="%{r}"                # right text alignment
+LEFT="%{c}"			# left text alignment
+CENTER="%{c}"			# center text alignment
+RIGHT="%{r}"			# right text alignment
 
 SEPARATOR="$FC1 ▏$FC"
 
@@ -86,13 +88,7 @@ sp_center
 sp_window_title
 sp_right
 sp_separator
-sp_wifi
-sp_separator
-sp_battery
-sp_separator
-sp_backlight
-sp_separator
-sp_clock
+sp_status
 "
 
 # Module definitions
@@ -103,9 +99,9 @@ sp_clock
 
 sp_main_menu()
 {
-    ICON="${FC2}%{T2} %{T1}${FC}" ;
-    COMMAND="morc_menu" ;
-    
+	ICON="${FC2}%{T2} %{T1}${FC}" ;
+	COMMAND="morc_menu" ;
+
 	printf "%s%s%s\n" "%{A:$COMMAND:}" "${ICON}" "%{A}" ;
 }
 
@@ -124,158 +120,212 @@ sp_right()
 	echo "$RIGHT" ;
 }
 
-sp_window_title()
-{
-    COMMAND="MonocleSwitcher"
-	xtitle -s -t -40 -f "%{A:$COMMAND:}%s%{A}\n" ;
-}
-
-sp_clock()
-{
-    ICON="$FC2%{T2}$FC%{T1}" ;
-    
-    while true ; do
-        printf "%s " "$ICON" ;
-        date '+%R ' ;
-        sleep "$UPD_INT" ;
-    done ;
-}
-
 sp_bspwm_status()
 {
-    COMMAND_1="bspc desktop -f next.occupied" ; # focus next occupied desktop
-    COMMAND_2="bspc desktop -f prev.occupied" ; # focus previous occupied desktop
-    COMMAND_3="bspc desktop -f last" ;          # focus last focused desktop
-    COMMAND_4="bspc desktop -f " ;              # focus desktop
-    COMMAND_5="bspc desktop -l next" ;          # switch to the next layout (tiling or monocle)
+	COMMAND_1="bspc desktop -f next.occupied" ;	# focus next occupied desktop
+	COMMAND_2="bspc desktop -f prev.occupied" ;	# focus previous occupied desktop
+	COMMAND_3="bspc desktop -f last" ;		# focus last focused desktop
+	COMMAND_4="bspc desktop -f " ;			# focus desktop
+	COMMAND_5="bspc desktop -l next" ;		# switch to the next layout (tiling or monocle)
 
-    i=10 ;
-    while ! bspc wm -g > /dev/null && [ $i -gt 0 ] ; do  # wait while bspwm starts
-        sleep 0.5 ;
-        i=$(($i-1)) ;
-    done ;
-    if [ $i -eq 0 ] ; then
-        echo "no bspwm" ;
-        exit ;              # exit if bspwm does not respond
-    fi ;
+	i=10 ;
+	while ! bspc wm -g > /dev/null && [ $i -gt 0 ] ; do	# wait while bspwm starts
+		sleep 0.5 ;
+		i=$(($i-1)) ;
+	done ;
+	if [ $i -eq 0 ] ; then
+		echo "no bspwm" ;
+		exit ;			# exit if bspwm does not respond
+	fi ;
 
 	bspc subscribe \
-	| {	IFS=':' ;
-        while read line ; do
-    	    printf "%s" "%{A4:$COMMAND_1:}%{A5:$COMMAND_2:}" ; # mouse wheel to switch desktops
-		    set -- $line ;
-		    while [ $# -gt 0 ] ; do
-		        desktop="${1#?}"
-			    case $1 in
-				    O*|F*|U*)   # highlight focused desktop (occupied, free or urgent)
-					    printf "%s%s %s %s%s" "$BC1" "%{A:$COMMAND_3:}" "$desktop" "%{A}" "$BC" ;;
-				    o*|u*)      # show unfocused desktops (occupied or urgent)
-					    printf "%s %s %s" "%{A:$COMMAND_4$desktop:}" "$desktop" "%{A}" ;;
-				    L*)         # show current layout (tiling or monocle)
-					    printf "%s %s %s" "%{A:$COMMAND_5:}" "$desktop" "%{A}" ;;
-			    esac ;
-			    shift ;
-		    done ;
-		    printf "%s\n" "%{A5}%{A4}" ;
-	    done ;
-    }
+	| {
+		IFS=':' ;
+		while read line ; do
+			printf "%s" "%{A4:$COMMAND_1:}%{A5:$COMMAND_2:}" ; # mouse wheel to switch desktops
+			set -- $line ;
+			while [ $# -gt 0 ] ; do
+				desktop="${1#?}"
+				case $1 in
+					O*|F*|U*)	# highlight focused desktop (occupied, free or urgent)
+						printf "%s%s %s %s%s" "$BC1" "%{A:$COMMAND_3:}" "$desktop" "%{A}" "$BC" ;;
+					o*|u*)		# show unfocused desktops (occupied or urgent)
+						printf "%s %s %s" "%{A:$COMMAND_4$desktop:}" "$desktop" "%{A}" ;;
+					L*)		# show current layout (tiling or monocle)
+						printf "%s %s %s" "%{A:$COMMAND_5:}" "$desktop" "%{A}" ;;
+				esac ;
+				shift ;
+			done ;
+			printf "%s\n" "%{A5}%{A4}" ;
+		done ;
+	}
+}
+
+sp_window_title()
+{
+	COMMAND="MonocleSwitcher"
+
+	xtitle -s -t -50 -f "%{A:$COMMAND:}%s%{A}\n" ;
+}
+
+# Modules with _once in the name do not loop so they can be combined into one status line
+# If combined they will update all together thus using less resources
+
+sp_wifi_once()
+{
+	COMMAND="terminal -e nmtui" ;		# run network manager text based UI
+
+	WIFI_INT="$(ip link show | awk '/state UP/ {print substr($2, 1, length($2)-1)}')" ;	# wireless interface name
+	printf "%s" "%{A:$COMMAND:}" ;
+	if [ -d /sys/class/net/${WIFI_INT}/wireless ] && [ "$(cat /sys/class/net/$WIFI_INT/operstate)" != 'down' ] ; then
+		WIFI_QUALITY=$(awk 'NR==3 {print int($3 * 100 / 70)}' /proc/net/wireless) ;
+		WIFI_NAME=$(iwgetid -r) ;
+		case $(( $WIFI_QUALITY / 20 )) in
+			5|4)	WIFI_BARS="$FC2▂▄▆█$FC" ;;
+			3)	WIFI_BARS="$FC2▂▄▆_$FC" ;;
+			2)	WIFI_BARS="$FC2▂▄__$FC" ;;
+			1)	WIFI_BARS="$FC3▂___$FC" ;;
+			*)	WIFI_BARS="$FC3____$FC" ;;
+		esac ;
+		printf "%s %s" "$WIFI_BARS" "$WIFI_NAME" ;
+	else
+		printf "no wifi" ;
+	fi ;
+	printf "%s\n" "%{A}" ;
 }
 
 sp_wifi()
 {
-    COMMAND="terminal -e nmtui" ; # run network manager UI
-    
-	while true; do
-    	WIFI_INT="$(ip link show | awk '/state UP/ {print substr($2, 1, length($2)-1)}')" # wireless interface name
-	    printf "%s" "%{A:$COMMAND:}" ;
-		if		[ -d /sys/class/net/${WIFI_INT}/wireless ] \
-			&&	[ "$(cat /sys/class/net/$WIFI_INT/operstate)" != 'down' ] ; \
-			then
-				WIFI_QUALITY=$(awk 'NR==3 {print int($3 * 100 / 70)}' /proc/net/wireless) ;
-				WIFI_NAME=$(iwgetid -r) ;
-				case $(( $WIFI_QUALITY / 20 )) in 
-				    5|4) WIFI_BARS="▂▄▆█" ;;
-				    3)   WIFI_BARS="▂▄▆_" ;;
-				    2)   WIFI_BARS="▂▄__" ;;
-				    1)   WIFI_BARS="▂___" ;;
-				    *)   WIFI_BARS="____" ;;
-				esac ;
-				printf "%s %s" "$FC2$WIFI_BARS$FC" "$WIFI_NAME" ;
-			else
-				printf "no wifi" ;
-		fi ;
-		   printf "%s\n" "%{A}" ;
-	sleep "$UPD_INT" ;
+	while true ; do
+		sp_wifi_once ;
+		sleep "$UPD_INT" ;
 	done ;
+}
+
+sp_battery_once()
+{
+	ICON_1="$FC2%{T2}%{T1}$FC" ;	# charging
+	ICON_2="$FC2%{T2}%{T1}$FC" ;	# full
+	ICON_3="$FC2%{T2}%{T1}$FC" ;	# almost full
+	ICON_4="$FC2%{T2}%{T1}$FC" ;	# almost empty
+	ICON_5="$FC3%{T2}%{T1}$FC" ;	# empty
+
+	COMMAND="xfce4-power-manager -c" ;
+
+	if !  [ -e /sys/class/power_supply/BAT*/ ] ; then
+		exit ;
+	fi ;
+
+	BAT_CAP="$(cat /sys/class/power_supply/BAT*/capacity)" ;
+	BAT_STAT="$(cat /sys/class/power_supply/BAT*/status)" ;
+
+	printf "%s" "%{A:$COMMAND:}" ;
+	if [ "$BAT_STAT" = "Charging" ] ; then
+		printf "%s" "$ICON_1 $BAT_CAP%" ;
+	else
+		case $(( $BAT_CAP / 25 )) in
+			4|3)	printf "%s" "$ICON_2 $BAT_CAP%" ;;
+			2)	printf "%s" "$ICON_3 $BAT_CAP%" ;;
+			1)	printf "%s" "$ICON_4 $BAT_CAP%" ;;
+			*)	printf "%s" "$ICON_5 $BAT_CAP%" ;;
+		esac ;
+	fi ;
+	printf "%s\n" "%{A}" ;
 }
 
 sp_battery()
 {
-    ICON_1="$FC2%{T2}%{T1}$FC" ;                       # charging
-    ICON_2="$FC2%{T2}%{T1}$FC" ;                       # full
-    ICON_3="$FC2%{T2}%{T1}$FC" ;                       # almost full
-    ICON_4="$FC2%{T2}%{T1}$FC" ;                       # almost empty
-    ICON_5="%{F$SP_FG_COLOR_URGENT}%{T2}%{T1}$FC" ;    # empty
-   
-    if !  [ -d /sys/class/power_supply/BAT* ] ; then
-        echo "no battery" ;
-        exit ;
-    fi ;
-    
-    while true ; do
-        BAT_CAP="$(cat /sys/class/power_supply/BAT*/capacity)" ;
-        BAT_STAT="$(cat /sys/class/power_supply/BAT*/status)" ;
-	    if [ "$BAT_STAT" = "Charging" ] ; then
-		    echo "$ICON_1 $BAT_CAP%"
-	    else 
-		    case $(( $BAT_CAP / 25 )) in
-		        4|3) echo "$ICON_2 $BAT_CAP%" ;;
-		        2) echo "$ICON_3 $BAT_CAP%" ;;
-		        1) echo "$ICON_4 $BAT_CAP%" ;;
-		        *) echo "$ICON_5 {F$SP_FG_COLOR_URGENT$BAT_CAP%$FC" ;;
-		    esac ;
-	    fi ;
-	    sleep $UPD_INT ;
-    done ;
+	while true ; do
+		sp_battery_once ;
+		sleep "%UPD_INT" ;
+	done
 }
 
 backlight_down()
 {
-    BL_STAT="$(xbacklight)" ;
-    if [ ${BL_STAT%%.*} -gt 6 ] ; then      # make sure backlight is not too low
-        xbacklight -time 50 -steps 10 "-5" ;
-    fi ;
+	BL_STAT="$(xbacklight -get)" ;
+	if [ ${BL_STAT%%.*} -gt 6 ] ; then		# make sure backlight is not too low
+		xbacklight -time 1 -steps 1 "-5" ;
+	fi ;
+}
+
+sp_backlight_once()
+{
+	ICON="$FC2%{T2}$FC%{T1}" ;
+
+	COMMAND_1='xbacklight -time 50 -steps 10 "+5"' ;
+	COMMAND_2='backlight_down' ;
+
+	if ! [ -e /sys/class/backlight/ ] ; then	# exit if no backlight is present
+		exit ;
+	fi ;
+
+	BL_STAT="$(xbacklight -get)" ;
+	BL_STAT="${BL_STAT%%.*}" ;
+	case $(( $BL_STAT / 12 )) in
+		8) BL_BAR='█' ;;
+		7) BL_BAR='▇' ;;
+		6) BL_BAR='▆' ;;
+		5) BL_BAR='▅' ;;
+		4) BL_BAR='▄' ;;
+		3) BL_BAR='▃' ;;
+		2) BL_BAR='▂' ;;
+		1) BL_BAR='▁' ;;
+		*) BL_BAR='_' ;;
+	esac ;
+	printf "%s%s %s%s\n" "%{A4:$COMMAND_1:}%{A5:$COMMAND_2:}" "$ICON" "$FC2$BL_BAR$FC" "%{A5}%{A4}" ;
 }
 
 sp_backlight()
 {
-    ICON="$FC2%{T2}$FC%{T1}" ;
+	while true ; do
+		sp_backlight_once ;
+		sleep $UPD_INT ;
+	done ;
+}
 
-    COMMAND_1='xbacklight -time 50 -steps 10 "+5"' ;
-    COMMAND_2='backlight_down' ;
-    
-    if ! [ -d /sys/class/backlight ] ; then     # exit if no backlight is present
-        echo "no backlight" ;
-        exit ;
-    fi ;
+sp_clock_once()
+{
+	ICON="$FC2%{T2}$FC%{T1}" ;
 
-    while true ; do
-        BL_STAT="$(xbacklight -get)" ;
-        BL_STAT="${BL_STAT%%.*}" ;
-        case $(( $BL_STAT / 12 )) in
-            8) BL_BAR='█' ;;
-            7) BL_BAR='▇' ;;
-            6) BL_BAR='▆' ;;
-            5) BL_BAR='▅' ;;
-            4) BL_BAR='▄' ;;
-            3) BL_BAR='▃' ;;
-            2) BL_BAR='▂' ;;
-            1) BL_BAR='▁' ;;
-            *) BL_BAR='_' ;;
-        esac ;
-        printf "%s%s %s%s\n" "%{A4:$COMMAND_1:}%{A5:$COMMAND_2:}" "$ICON" "$FC2$BL_BAR$FC" "%{A5}%{A4}";
-        sleep $UPD_INT ;
-    done ;
+	printf "%s " "$ICON" ;
+	date '+%R ' ;
+}
+
+sp_clock()
+{
+	while true ; do
+		sp_clock_once ;
+		sleep "$UPD_INT" ;
+	done ;
+}
+
+# Set status line structure. Make sure these modules do not loop
+
+sp_status_modules="
+sp_wifi_once
+sp_separator
+sp_battery_once
+sp_separator
+sp_backlight_once
+sp_separator
+sp_clock_once
+"
+
+sp_status_once()
+{
+	for status_module in $sp_status_modules ; do
+		printf "%s" "$($status_module)" ;
+	done
+	printf "\n" ;
+}
+
+sp_status()
+{
+	while true ; do
+		sp_status_once ;
+		sleep "$UPD_INT" ;
+	done ;
 }
 _EOF_
 fi ;
@@ -289,43 +339,44 @@ fi ;
 #### INITIALIZE PANEL ####
 
 sp_values="" ;
-for module in $sp_modules ; do      # set initial values
-	sp_values="$sp_values\n" ;      # one line for each module
+for module in $sp_modules ; do		# set initial values
+	sp_values="$sp_values\n" ;	# one empty line for a module
 done ;
 i=0 ;
-for module in $sp_modules ; do      # start modules
+for module in $sp_modules ; do		# start modules
 	"$module" \
-	| { IFS="\n" ;                  # needed to preserve initial and final spaces
+	| {
+		IFS="\n" ;		# needed to preserve initial and final spaces
 		while read line ; do 
-			printf "%s/%s\n" "$i" "$line" ; # add module index to the line
+			printf "%s/%s\n" "$i" "$line" ;	# add module index to the line
 		done ;
-	} &                             # spawn processes for modules
+	} &				# spawn processes for modules
 	i=$(($i+1)) ;
 done \
 | { 
 
 #### UPDATE PANEL ####
 
-	IFS="\n" ;                  # needed to preserve initial and final spaces
-	while read line ; do        # update panel every time a module prints a line
-		index="${line%%/*}" ;   # get index of module that needs update
+	IFS="\n" ;			# needed to preserve initial and final spaces
+	while read line ; do		# update panel every time a module prints a line
+		index="${line%%/*}" ;	# get index of the module that needs update
 		i=0 ;
 		sp_values_new="" ;
-		while [ -n "$sp_values" ] ; do              # read stored set of values
+		while [ -n "$sp_values" ] ; do			# read stored set of values
 			if [ $i -eq $index ] ; then
-				value="$line" ;                     # replace appropriate value
-				else
-				value="${sp_values%%\\n*}" ;        # keep all other values
+				value="$line" ;			# replace appropriate value
+			else
+				value="${sp_values%%\\n*}" ;	# keep all other values
 			fi
-			sp_values="${sp_values#*\\n}" ;         # remove old value
-			sp_values_new="$sp_values_new$value\n" ; # store new value
-			value="${value#*/}" ;                   # remove index from line
-			printf "%s" "${value}" ;                # print new value
+			sp_values="${sp_values#*\\n}" ;		# remove old stored value
+			sp_values_new="$sp_values_new$value\n" ;	# store new value
+			value="${value#*/}" ;			# remove index from current value
+			printf "%s" "${value}" ;		# print current value
 			i=$(($i+1)) ;
 		done ;
-		printf "\n" ;                   # end the line to update lemonbar
-		sp_values="$sp_values_new" ;    # replace old set of values with new
-		sleep 0.01 ;                    # a delay needed for smooth updates
+		printf "\n" ;			# end the line to update lemonbar
+		sp_values="$sp_values_new" ;	# replace old set of values with new one
+		sleep 0.01 ;			# a delay needed for smooth updates (lemonbar bug?)
 	done ;
 } | lemonbar \
 	-g "${SP_WIDTH}x${SP_HEIGHT}${SP_POSITION}" \
@@ -337,7 +388,10 @@ done \
 	-o "$SP_OFFSET_3" \
 	-B "$SP_BG_COLOR" \
 	-F "$SP_FG_COLOR" \
-| while read line ; do eval "$line" ; done ; # execute commands for clickable areas of lemonbar
+	"$SP_BOTTOM" \
+| while read line ; do
+	eval "$line" ;		# execute commands for clickable areas of lemonbar
+done &
 
 wait ;
 
