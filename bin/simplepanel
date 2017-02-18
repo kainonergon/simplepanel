@@ -288,8 +288,9 @@ sp_clock_once()
 {
 	ICON="$FC2%{T2}$FC%{T1}" ;
 
-	printf "%s " "$ICON" ;
-	date '+%R ' ;
+	COMMAND="notify-send $(date '+%x %A')"
+
+	printf "%s%s %s %s\n" "%{A:$COMMAND:}" "$ICON" "$(date '+%R')" "%{A}" ;
 }
 
 sp_clock()
