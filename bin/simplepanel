@@ -175,21 +175,6 @@ sp_window_title()
 # Modules with _once in the name do not loop so they can be combined into one status line
 # If combined they will update all together thus using less resources
 
-update_now()
-{
-	touch "${TMP}update_now" ;	# set a flag for immediate update of the status line (for interactive modules)
-}
-
-wait_for_update()
-{
-	i=0 ;
-	while ! [ -f "${TMP}update_now" ] && [ $i -lt ${UPD_INT}0 ] ; do
-		i=$(( $i+1 )) ;
-		sleep 0.1 ;
-	done
-	rm "${TMP}update_now" ;
-}
-
 sp_wifi_once()
 {
 	COMMAND="terminal -e nmtui" ;		# run network manager text based UI
@@ -248,15 +233,15 @@ backlight_down()
 {
 	BL_STAT="$(xbacklight -get)" ;
 	if [ ${BL_STAT%%.*} -gt 6 ] ; then		# make sure backlight is not too low
-		xbacklight -time 100 -steps 10 "-5" ;
+		xbacklight -time 10 -steps 10 "-5" ;
 	fi ;
-	update_now ;
+	printf "\n" > "${TMP}update_status_now" ;
 }
 
 backlight_up()
 {
-	xbacklight -time 100 -steps 10 "+5" ;
-	update_now ;
+	xbacklight -time 10 -steps 10 "+5" ;
+	printf "\n" > "${TMP}update_status_now" ;
 }
 
 sp_backlight_once()
@@ -288,12 +273,12 @@ sp_backlight_once()
 
 show_date_toggle()
 {
-	update_now ;
 	if [ -f "${TMP}show_date_toggle" ] ; then
 		rm "${TMP}show_date_toggle" ;
 	else
 		touch "${TMP}show_date_toggle" ;
 	fi ;
+	printf "\n" > "${TMP}update_status_now" ;
 }
 
 sp_clock_once()
@@ -333,9 +318,18 @@ sp_status_once()
 
 sp_status()
 {
+	if [ -e "${TMP}update_status_now" ] ; then
+		rm "${TMP}update_status_now" ;
+	fi ;
+	mkfifo "${TMP}update_status_now" ;
+
 	while true ; do
+		printf "\n" > "${TMP}update_status_now" ;
+		sleep "$UPD_INT" ;
+	done &
+
+	while read line < "${TMP}update_status_now"; do
 		sp_status_once ;
-		wait_for_update ;
 	done ;
 }
 _EOF_
