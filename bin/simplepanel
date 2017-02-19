@@ -183,9 +183,9 @@ update_now()
 wait_for_update()
 {
 	i=0 ;
-	while ! [ -f "${TMP}update_now" ] && [ $i -lt ${UPD_INT}00 ] ; do
+	while ! [ -f "${TMP}update_now" ] && [ $i -lt ${UPD_INT}0 ] ; do
 		i=$(( $i+1 )) ;
-		sleep 0.01 ;
+		sleep 0.1 ;
 	done
 	rm "${TMP}update_now" ;
 }
@@ -211,14 +211,6 @@ sp_wifi_once()
 		printf "no wifi" ;
 	fi ;
 	printf "%s\n" "%{A}" ;
-}
-
-sp_wifi()
-{
-	while true ; do
-		sp_wifi_once ;
-		sleep "$UPD_INT" ;
-	done ;
 }
 
 sp_battery_once()
@@ -252,26 +244,18 @@ sp_battery_once()
 	printf "%s\n" "%{A}" ;
 }
 
-sp_battery()
-{
-	while true ; do
-		sp_battery_once ;
-		sleep "%UPD_INT" ;
-	done
-}
-
 backlight_down()
 {
 	BL_STAT="$(xbacklight -get)" ;
 	if [ ${BL_STAT%%.*} -gt 6 ] ; then		# make sure backlight is not too low
-		xbacklight -time 10 -steps 10 "-5" ;
+		xbacklight -time 100 -steps 10 "-5" ;
 	fi ;
 	update_now ;
 }
 
 backlight_up()
 {
-	xbacklight -time 10 -steps 10 "+5" ;
+	xbacklight -time 100 -steps 10 "+5" ;
 	update_now ;
 }
 
@@ -302,14 +286,6 @@ sp_backlight_once()
 	printf "%s%s %s%s\n" "%{A4:$COMMAND_1:}%{A5:$COMMAND_2:}" "$ICON" "$FC2$BL_BAR$FC" "%{A5}%{A4}" ;
 }
 
-sp_backlight()
-{
-	while true ; do
-		sp_backlight_once ;
-		sleep $UPD_INT ;
-	done ;
-}
-
 show_date_toggle()
 {
 	update_now ;
@@ -333,14 +309,6 @@ sp_clock_once()
 	fi ;
 
 	printf "%s %s %s\n" "$ICON_CLOCK" "$(date '+%R')" "%{A}" ;		# print time
-}
-
-sp_clock()
-{
-	while true ; do
-		sp_clock_once ;
-		sleep "$UPD_INT" ;
-	done ;
 }
 
 # Set status line structure. Make sure these modules do not loop
