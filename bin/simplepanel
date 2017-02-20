@@ -104,9 +104,9 @@ sp_status
 sp_main_menu()
 {
 	ICON="${FC2}%{T2} %{T1}${FC}" ;
-	COMMAND="morc_menu" ;
+	COMMAND_1="morc_menu" ;
 
-	printf "%s%s%s\n" "%{A:$COMMAND:}" "${ICON}" "%{A}" ;
+	printf "%s%s%s\n" "%{A1:$COMMAND_1:}" "${ICON}" "%{A1}" ;
 }
 
 sp_separator()
@@ -167,146 +167,29 @@ sp_bspwm_status()
 
 sp_window_title()
 {
-	COMMAND="MonocleSwitcher"
+	COMMAND_1="MonocleSwitcher"
 
-	xtitle -s -t -50 -f "%{A:$COMMAND:}%s%{A}\n" ;
+	xtitle -s -t -50 -f "%{A1:$COMMAND_1:}%s%{A1}\n" ;
 }
 
 # Modules with _once in the name do not loop so they can be combined into one status line
 # If combined they will update all together thus using less resources
-
-sp_wifi_once()
-{
-	COMMAND="terminal -e nmtui" ;		# run network manager text based UI
-
-	WIFI_INT="$(ip link show | awk '/state UP/ {print substr($2, 1, length($2)-1)}')" ;	# wireless interface name
-	printf "%s" "%{A:$COMMAND:}" ;
-	if [ -d /sys/class/net/${WIFI_INT}/wireless ] && [ "$(cat /sys/class/net/$WIFI_INT/operstate)" != 'down' ] ; then
-		WIFI_QUALITY=$(awk 'NR==3 {print int($3 * 100 / 70)}' /proc/net/wireless) ;
-		WIFI_NAME=$(iwgetid -r) ;
-		case $(( $WIFI_QUALITY / 20 )) in
-			5|4)	WIFI_BARS="$FC2▂▄▆█$FC" ;;
-			3)	WIFI_BARS="$FC2▂▄▆_$FC" ;;
-			2)	WIFI_BARS="$FC2▂▄__$FC" ;;
-			1)	WIFI_BARS="$FC3▂___$FC" ;;
-			*)	WIFI_BARS="$FC3____$FC" ;;
-		esac ;
-		printf "%s %s" "$WIFI_BARS" "$WIFI_NAME" ;
-	else
-		printf "no wifi" ;
-	fi ;
-	printf "%s\n" "%{A}" ;
-}
-
-sp_battery_once()
-{
-	ICON_1="$FC2%{T2}%{T1}$FC" ;	# charging
-	ICON_2="$FC2%{T2}%{T1}$FC" ;	# full
-	ICON_3="$FC2%{T2}%{T1}$FC" ;	# almost full
-	ICON_4="$FC2%{T2}%{T1}$FC" ;	# almost empty
-	ICON_5="$FC3%{T2}%{T1}$FC" ;	# empty
-
-	COMMAND="xfce4-power-manager -c" ;
-
-	if !  [ -e /sys/class/power_supply/BAT*/ ] ; then
-		exit ;
-	fi ;
-
-	BAT_CAP="$(cat /sys/class/power_supply/BAT*/capacity)" ;
-	BAT_STAT="$(cat /sys/class/power_supply/BAT*/status)" ;
-
-	printf "%s" "%{A:$COMMAND:}" ;
-	if [ "$BAT_STAT" = "Charging" ] ; then
-		printf "%s" "$ICON_1 $BAT_CAP%" ;
-	else
-		case $(( $BAT_CAP / 25 )) in
-			4|3)	printf "%s" "$ICON_2 $BAT_CAP%" ;;
-			2)	printf "%s" "$ICON_3 $BAT_CAP%" ;;
-			1)	printf "%s" "$ICON_4 $BAT_CAP%" ;;
-			*)	printf "%s" "$ICON_5 $BAT_CAP%" ;;
-		esac ;
-	fi ;
-	printf "%s\n" "%{A}" ;
-}
-
-backlight_down()
-{
-	BL_STAT="$(xbacklight -get)" ;
-	if [ ${BL_STAT%%.*} -gt 6 ] ; then		# make sure backlight is not too low
-		xbacklight -time 10 -steps 10 "-5" ;
-	fi ;
-	printf "\n" > "${TMP}update_status_now" ;
-}
-
-backlight_up()
-{
-	xbacklight -time 10 -steps 10 "+5" ;
-	printf "\n" > "${TMP}update_status_now" ;
-}
-
-sp_backlight_once()
-{
-	ICON="$FC2%{T2}$FC%{T1}" ;
-
-	COMMAND_1='backlight_up' ;
-	COMMAND_2='backlight_down' ;
-
-	if ! [ -e /sys/class/backlight/ ] ; then	# exit if no backlight is present
-		exit ;
-	fi ;
-
-	BL_STAT="$(xbacklight -get)" ;
-	BL_STAT="${BL_STAT%%.*}" ;
-	case $(( $BL_STAT / 12 )) in
-		8) BL_BAR='█' ;;
-		7) BL_BAR='▇' ;;
-		6) BL_BAR='▆' ;;
-		5) BL_BAR='▅' ;;
-		4) BL_BAR='▄' ;;
-		3) BL_BAR='▃' ;;
-		2) BL_BAR='▂' ;;
-		1) BL_BAR='▁' ;;
-		*) BL_BAR='_' ;;
-	esac ;
-	printf "%s%s %s%s\n" "%{A4:$COMMAND_1:}%{A5:$COMMAND_2:}" "$ICON" "$FC2$BL_BAR$FC" "%{A5}%{A4}" ;
-}
-
-show_date_toggle()
-{
-	if [ -f "${TMP}show_date_toggle" ] ; then
-		rm "${TMP}show_date_toggle" ;
-	else
-		touch "${TMP}show_date_toggle" ;
-	fi ;
-	printf "\n" > "${TMP}update_status_now" ;
-}
-
-sp_clock_once()
-{
-	ICON_CLOCK="$FC2%{T2}$FC%{T1}" ;
-	ICON_DATE="$FC2%{T2}$FC%{T1}" ;
-
-	COMMAND="show_date_toggle"
-
-	printf "%s" "%{A:$COMMAND:}" ;
-	if [ -f "${TMP}show_date_toggle" ] ; then
-		printf "%s %s%s" "$ICON_DATE" "$(date '+%x')" "$SEPARATOR" ;	# print date
-	fi ;
-
-	printf "%s %s %s\n" "$ICON_CLOCK" "$(date '+%R')" "%{A}" ;		# print time
-}
 
 # Set status line structure. Make sure these modules do not loop
 
 sp_status_modules="
 sp_wifi_once
 sp_separator
-sp_battery_once
+sp_volume_once
 sp_separator
 sp_backlight_once
 sp_separator
+sp_battery_once
+sp_separator
 sp_clock_once
 "
+
+# status line module
 
 sp_status_once()
 {
@@ -331,6 +214,197 @@ sp_status()
 	while read line < "${TMP}update_status_now"; do
 		sp_status_once ;
 	done ;
+}
+
+# wifi module for status line
+
+sp_wifi_once()
+{
+	COMMAND_3="terminal -e nmtui" ;		# run network manager text based UI
+
+	WIFI_INT="$(ip link show | awk '/state UP/ {print substr($2, 1, length($2)-1)}')" ;	# wireless interface name
+	printf "%s" "%{A3:$COMMAND_3:}" ;
+	if [ -d /sys/class/net/${WIFI_INT}/wireless ] && [ "$(cat /sys/class/net/$WIFI_INT/operstate)" != 'down' ] ; then
+		WIFI_QUALITY=$(awk 'NR==3 {print int($3 * 100 / 70)}' /proc/net/wireless) ;
+		WIFI_NAME=$(iwgetid -r) ;
+		case $(( $WIFI_QUALITY / 20 )) in
+			5|4)	WIFI_BARS="$FC2▂▄▆█$FC" ;;
+			3)	WIFI_BARS="$FC2▂▄▆_$FC" ;;
+			2)	WIFI_BARS="$FC2▂▄__$FC" ;;
+			1)	WIFI_BARS="$FC3▂___$FC" ;;
+			*)	WIFI_BARS="$FC3____$FC" ;;
+		esac ;
+		printf "%s %s" "$WIFI_BARS" "$WIFI_NAME" ;
+	else
+		printf "no wifi" ;
+	fi ;
+	printf "%s\n" "%{A3}" ;
+}
+
+# battery module for status line
+
+sp_battery_once()
+{
+	ICON_1="$FC2%{T2}%{T1}$FC" ;	# charging
+	ICON_2="$FC2%{T2}%{T1}$FC" ;	# full
+	ICON_3="$FC2%{T2}%{T1}$FC" ;	# almost full
+	ICON_4="$FC2%{T2}%{T1}$FC" ;	# almost empty
+	ICON_5="$FC3%{T2}%{T1}$FC" ;	# empty
+
+	COMMAND_3="xfce4-power-manager -c" ;
+	COMMAND_4="backlight_up" ;
+	COMMAND_5="backlight_down" ;
+
+	if !  [ -e /sys/class/power_supply/BAT*/ ] ; then
+		exit ;
+	fi ;
+
+	BAT_CAP="$(cat /sys/class/power_supply/BAT*/capacity)" ;
+	BAT_STAT="$(cat /sys/class/power_supply/BAT*/status)" ;
+
+	printf "%s" "%{A3:$COMMAND_3:}%{A4:$COMMAND_4:}%{A5:$COMMAND_5:}" ;
+	if [ "$BAT_STAT" = "Charging" ] ; then
+		printf "%s" "$ICON_1 $BAT_CAP%" ;
+	else
+		case $(( $BAT_CAP / 25 )) in
+			4|3)	printf "%s" "$ICON_2 $BAT_CAP%" ;;
+			2)	printf "%s" "$ICON_3 $BAT_CAP%" ;;
+			1)	printf "%s" "$ICON_4 $BAT_CAP%" ;;
+			*)	printf "%s" "$ICON_5 $BAT_CAP%" ;;
+		esac ;
+	fi ;
+	printf "%s\n" "%{A5}%{A4}%{A3}" ;
+}
+
+# backlight module for status line
+
+backlight_down()
+{
+	BL_STAT="$(xbacklight -get)" ;
+	if [ ${BL_STAT%%.*} -gt 6 ] ; then		# make sure backlight is not too low
+		xbacklight -time 10 -steps 10 "-5" ;
+	fi ;
+	printf "\n" > "${TMP}update_status_now" ;
+}
+
+backlight_up()
+{
+	xbacklight -time 10 -steps 10 "+5" ;
+	printf "\n" > "${TMP}update_status_now" ;
+}
+
+sp_backlight_once()
+{
+	ICON="$FC2%{T2}$FC%{T1}" ;
+
+	COMMAND_4="backlight_up" ;
+	COMMAND_5="backlight_down" ;
+
+	if ! [ -e /sys/class/backlight/ ] ; then	# exit if no backlight is present
+		exit ;
+	fi ;
+
+	BL_STAT="$(xbacklight -get)" ;
+	BL_STAT="${BL_STAT%%.*}" ;
+	case $(( $BL_STAT / 11 )) in
+		9|8) BL_BAR='█' ;;
+		7) BL_BAR='▇' ;;
+		6) BL_BAR='▆' ;;
+		5) BL_BAR='▅' ;;
+		4) BL_BAR='▄' ;;
+		3) BL_BAR='▃' ;;
+		2) BL_BAR='▂' ;;
+		1) BL_BAR='▁' ;;
+		*) BL_BAR=' ' ;;
+	esac ;
+	printf "%s%s %s%s\n" "%{A4:$COMMAND_4:}%{A5:$COMMAND_5:}" "$ICON" "$FC2$BL_BAR$FC" "%{A5}%{A4}" ;
+}
+
+# clock module for status line
+
+show_date_toggle()
+{
+	if [ -f "${TMP}show_date_toggle" ] ; then
+		rm "${TMP}show_date_toggle" ;
+	else
+		touch "${TMP}show_date_toggle" ;
+	fi ;
+	printf "\n" > "${TMP}update_status_now" ;
+}
+
+sp_clock_once()
+{
+	ICON_CLOCK="$FC2%{T2}$FC%{T1}" ;
+	ICON_DATE="$FC2%{T2}$FC%{T1}" ;
+
+	COMMAND_1="show_date_toggle"
+
+	printf "%s" "%{A1:$COMMAND_1:}" ;
+	if [ -f "${TMP}show_date_toggle" ] ; then
+		printf "%s %s%s" "$ICON_DATE" "$(date '+%x')" "$SEPARATOR" ;	# print date
+	fi ;
+
+	printf "%s %s %s\n" "$ICON_CLOCK" "$(date '+%R')" "%{A1}" ;		# print time
+}
+
+# sound volume module for status line
+
+volume_get_level()
+{
+	amixer get Master | sed -n 's/^.*\[\([0-9]\+\)%.*$/\1/p' | head -n 1 ;
+}
+
+volume_get_state()
+{
+	amixer get Master | sed -n 's/^.*\[\(o[nf]\+\).*$/\1/p' | head -n 1 ;
+}
+
+volume_toggle()
+{
+	amixer set Master toggle ;
+	printf "\n" > "${TMP}update_status_now" ;
+}
+
+volume_up()
+{
+	amixer set Master 5%+ ;
+	printf "\n" > "${TMP}update_status_now" ;
+}
+
+volume_down()
+{
+	amixer set Master 5%- ;
+	printf "\n" > "${TMP}update_status_now" ;
+}
+
+sp_volume_once()
+{
+	ICON_1="$FC2%{T2}$FC%{T1}" ;	# mute
+	ICON_2="$FC2%{T2}$FC%{T1}" ;	# low
+	ICON_3="$FC2%{T2}$FC%{T1}" ;	# medium
+	ICON_4="$FC2%{T2}$FC%{T1}" ;	# high
+
+	COMMAND_1="volume_toggle" ;
+	COMMAND_3="terminal -e alsamixer" ;
+	COMMAND_4="volume_up" ;
+	COMMAND_5="volume_down" ;
+
+	VOL_LEVEL="$(volume_get_level)" ;
+	case $(( $VOL_LEVEL / 11 )) in
+		9|8) VOL_BAR='█'; ICON="$ICON_4" ;;
+		7) VOL_BAR='▇'	; ICON="$ICON_4" ;;
+		6) VOL_BAR='▆'	; ICON="$ICON_4" ;;
+		5) VOL_BAR='▅'	; ICON="$ICON_3" ;;
+		4) VOL_BAR='▄'	; ICON="$ICON_3" ;;
+		3) VOL_BAR='▃'	; ICON="$ICON_3" ;;
+		2) VOL_BAR='▂'	; ICON="$ICON_2" ;;
+		1) VOL_BAR='▁'	; ICON="$ICON_2" ;;
+		*) VOL_BAR=' '	; ICON="$ICON_2" ;;
+	esac ;
+	if [ "$(volume_get_state)" = "off" ] ; then
+		ICON="$ICON_1" ;
+	fi ;
+	printf "%s%s %s%s\n" "%{A1:$COMMAND_1:}%{A3:$COMMAND_3:}%{A4:$COMMAND_4:}%{A5:$COMMAND_5:}" "$ICON" "$FC2$VOL_BAR$FC" "%{A5}%{A4}%{A3}%{A1}" ;
 }
 _EOF_
 fi ;
@@ -382,7 +456,7 @@ done \
 			sp_values_new="$sp_values_new$value\n" ;	# store new value
 			value="${value#*/}" ;			# remove index from current value
 			printf "%s" "${value}" ;		# print current value
-			i=$(($i+1)) ;
+			i=$(( $i+1 )) ;
 		done ;
 		printf "\n" ;			# end the line to update lemonbar
 		sp_values="$sp_values_new" ;	# replace old set of values with new one
@@ -390,16 +464,13 @@ done \
 	done ;
 } | lemonbar \
 	-g "${SP_WIDTH}x${SP_HEIGHT}${SP_POSITION}" \
-	-f "$SP_FONT_1" \
-	-o "$SP_OFFSET_1" \
-	-f "$SP_FONT_2" \
-	-o "$SP_OFFSET_2" \
-	-f "$SP_FONT_3" \
-	-o "$SP_OFFSET_3" \
+	-f "$SP_FONT_1" -o "$SP_OFFSET_1" \
+	-f "$SP_FONT_2" -o "$SP_OFFSET_2" \
+	-f "$SP_FONT_3" -o "$SP_OFFSET_3" \
 	-B "$SP_BG_COLOR" \
 	-F "$SP_FG_COLOR" \
 	"$SP_BOTTOM" \
 | while read line ; do
-	eval "$line &" ;	# execute commands for clickable areas of lemonbar
+	eval "$line &"	# execute commands for clickable areas of lemonbar
 done ;
 
