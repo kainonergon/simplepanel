@@ -351,6 +351,7 @@ sp_values="" ;
 for module in $sp_modules ; do		# set initial values
 	sp_values="$sp_values\n" ;	# one empty line for a module
 done ;
+
 i=0 ;
 for module in $sp_modules ; do		# start modules
 	"$module" \
@@ -399,8 +400,6 @@ done \
 	-F "$SP_FG_COLOR" \
 	"$SP_BOTTOM" \
 | while read line ; do
-	eval "$line" ;		# execute commands for clickable areas of lemonbar
-done &
-
-wait ;
+	eval "$line &" ;	# execute commands for clickable areas of lemonbar
+done ;
 
