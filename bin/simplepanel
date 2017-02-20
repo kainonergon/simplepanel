@@ -471,6 +471,6 @@ done \
 	-F "$SP_FG_COLOR" \
 	"$SP_BOTTOM" \
 | while read line ; do
-	eval "$line &"	# execute commands for clickable areas of lemonbar
+	eval "$line"	# execute commands for clickable areas of lemonbar
 done ;
 
