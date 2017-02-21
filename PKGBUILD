@@ -15,7 +15,7 @@ optdepends=('bspwm-manjaro: window manager the panel is intended for'
 	'morc_menu: default main menu'
 	'wireless_tools: wifi info'
 	'xtitle: window title info'
-	'xkb-switch-git': keyboard layout indicator)
+	'xkb-switch-git: keyboard layout indicator')
 makedepends=('git')
 source=("git://github.com/kainonergon/$pkgname")
 md5sums=('SKIP')
