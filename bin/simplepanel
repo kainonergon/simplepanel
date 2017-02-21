@@ -92,6 +92,8 @@ sp_window_title
 sp_center
 sp_right
 sp_separator
+sp_xkb_layout
+sp_separator
 sp_status
 "
 
@@ -172,6 +174,17 @@ sp_window_title()
 	xtitle -s -t -50 -f "%{A1:$COMMAND_1:}%s%{A1}\n" ;
 }
 
+sp_xkb_layout()
+{
+	ICON="$FC2%{T2}$FC%{T1}" ;
+	COMMAND_1="xkb-switch -n" ;
+
+	{ xkb-switch ; xkb-switch -W ; } \
+	| while read layout; do
+		printf "%s%s %s%s\n" "%{A1:$COMMAND_1:}" "$ICON" "$layout" "%{A1}" ;
+	done ;
+}
+
 # Modules with _once in the name do not loop so they can be combined into one status line
 # If combined they will update all together thus using less resources
 
@@ -179,8 +192,6 @@ sp_window_title()
 
 sp_status_modules="
 sp_wifi_once
-sp_separator
-sp_xkb_once
 sp_separator
 sp_volume_once
 sp_separator
@@ -407,21 +418,6 @@ sp_volume_once()
 		ICON="$ICON_1" ;
 	fi ;
 	printf "%s%s %s%s\n" "%{A1:$COMMAND_1:}%{A3:$COMMAND_3:}%{A4:$COMMAND_4:}%{A5:$COMMAND_5:}" "$ICON" "$FC2$VOL_BAR$FC" "%{A5}%{A4}%{A3}%{A1}" ;
-}
-
-xkb_next_layout()
-{
-	xkb-switch -n ;
-	printf "\n" > "${TMP}update_status_now" ;
-}
-
-sp_xkb_once()
-{
-	ICON="$FC2%{T2}$FC%{T1}" ;
-
-	COMMAND_1="xkb_next_layout" ;
-
-	printf "%s%s %s%s\n" "%{A1:$COMMAND_1:}" "$ICON" "$(xkb-switch)" "%{A1}" ;
 }
 _EOF_
 fi ;
