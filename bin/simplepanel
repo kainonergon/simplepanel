@@ -180,6 +180,8 @@ sp_window_title()
 sp_status_modules="
 sp_wifi_once
 sp_separator
+sp_xkb_once
+sp_separator
 sp_volume_once
 sp_separator
 sp_backlight_once
@@ -335,7 +337,7 @@ show_date_toggle()
 sp_clock_once()
 {
 	ICON_CLOCK="$FC2%{T2}$FC%{T1}" ;
-	ICON_DATE="$FC2%{T2}$FC%{T1}" ;
+	ICON_DATE="$FC2%{T2}$FC%{T1}" ;
 
 	COMMAND_1="show_date_toggle"
 
@@ -405,6 +407,21 @@ sp_volume_once()
 		ICON="$ICON_1" ;
 	fi ;
 	printf "%s%s %s%s\n" "%{A1:$COMMAND_1:}%{A3:$COMMAND_3:}%{A4:$COMMAND_4:}%{A5:$COMMAND_5:}" "$ICON" "$FC2$VOL_BAR$FC" "%{A5}%{A4}%{A3}%{A1}" ;
+}
+
+xkb_next_layout()
+{
+	xkb-switch -n ;
+	printf "\n" > "${TMP}update_status_now" ;
+}
+
+sp_xkb_once()
+{
+	ICON="$FC2%{T2}$FC%{T1}" ;
+
+	COMMAND_1="xkb_next_layout" ;
+
+	printf "%s%s %s%s\n" "%{A1:$COMMAND_1:}" "$ICON" "$(xkb-switch)" "%{A1}" ;
 }
 _EOF_
 fi ;
