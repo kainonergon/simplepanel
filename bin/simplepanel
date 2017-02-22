@@ -9,8 +9,10 @@
 # Kill any older panel processes
 
 while [ $(pgrep -cx simplepanel) -gt 1 ] ; do pkill -ox -9 simplepanel ; done ;
-while [ $(pgrep -cx lemonbar) -gt 1 ] ; do pkill -ox -9 lemonbar ; done ;
-while [ $(pgrep -cx xtitle) -gt 1 ] ; do pkill -ox -9 xtitle ; done ;
+while [ $(pgrep -cx lemonbar) -gt 0 ] ; do pkill -ox -9 lemonbar ; done ;
+while [ $(pgrep -cx xtitle) -gt 0 ] ; do pkill -ox -9 xtitle ; done ;
+while [ $(pgrep -cx bspc) -gt 0 ] ; do pkill -ox -9 bspc ; done ;
+while [ $(pgrep -cx xkb-switch) -gt 0 ] ; do pkill -ox -9 xkb-switch ; done ;
 
 if ! [ -f "$HOME/.simplepanelrc" ] || [ "$1" = '--reset' ] ; then	# write default configuration file
     cat > "$HOME/.simplepanelrc"<<"_EOF_"
@@ -93,11 +95,12 @@ sp_center
 sp_right
 sp_separator
 sp_xkb_layout
-sp_separator
 sp_status
 "
 
 # Module definitions
+# Every module gets its index as a positional parameter
+# A module shoud print this index in the beginning of the line
 # If contents of a module do not change (button, separator, etc.) it should print one line and exit
 # If contents of a module change (window title, clock, etc.) it should print one line for every new value
 # The panel updates every time a module prints a line
@@ -108,22 +111,22 @@ sp_main_menu()
 	ICON="${FC2}%{T2} %{T1}${FC}" ;
 	COMMAND_1="morc_menu" ;
 
-	printf "%s%s%s\n" "%{A1:$COMMAND_1:}" "${ICON}" "%{A1}" ;
+	printf "%s%s%s\n" "$1%{A1:$COMMAND_1:}" "${ICON}" "%{A1}" ;
 }
 
 sp_separator()
 {
-	echo "$SEPARATOR" ;
+	echo "$1$SEPARATOR" ;
 }
 
 sp_center()
 {
-	echo "$CENTER" ;
+	echo "$1$CENTER" ;
 }
 
 sp_right()
 {
-	echo "$RIGHT" ;
+	echo "$1$RIGHT" ;
 }
 
 sp_bspwm_status()
@@ -134,13 +137,15 @@ sp_bspwm_status()
 	COMMAND_4="bspc desktop -f " ;			# focus desktop
 	COMMAND_5="bspc desktop -l next" ;		# switch to the next layout (tiling or monocle)
 
+	index="$1"
+
 	i=10 ;
 	while ! bspc wm -g > /dev/null && [ $i -gt 0 ] ; do	# wait while bspwm starts
 		sleep 0.5 ;
 		i=$(($i-1)) ;
 	done ;
 	if [ $i -eq 0 ] ; then
-		echo "no bspwm" ;
+		echo "${index}no bspwm" ;
 		exit ;			# exit if bspwm does not respond
 	fi ;
 
@@ -148,20 +153,20 @@ sp_bspwm_status()
 	| {
 		IFS=':' ;
 		while read line ; do
-			printf "%s" "%{A4:$COMMAND_1:}%{A5:$COMMAND_2:}" ; # mouse wheel to switch desktops
-			set -- $line ;
-			while [ $# -gt 0 ] ; do
-				desktop="${1#?}"
-				case $1 in
-					O*|F*|U*)	# highlight focused desktop (occupied, free or urgent)
-						printf "%s%s %s %s%s" "$BC1" "%{A:$COMMAND_3:}" "$desktop" "%{A}" "$BC" ;;
-					o*|u*)		# show unfocused desktops (occupied or urgent)
-						printf "%s %s %s" "%{A:$COMMAND_4$desktop:}" "$desktop" "%{A}" ;;
-					L*)		# show current layout (tiling or monocle)
-						printf "%s %s %s" "%{A:$COMMAND_5:}" "$desktop" "%{A}" ;;
-				esac ;
-				shift ;
-			done ;
+			printf "%s" "$index%{A4:$COMMAND_1:}%{A5:$COMMAND_2:}" ; # mouse wheel to switch desktops
+				set -- $line ;
+				while [ $# -gt 0 ] ; do
+					desktop="${1#?}" ;
+					case $1 in
+						O*|F*|U*)	# highlight focused desktop (occupied, free or urgent)
+							printf "%s%s %s %s%s" "$BC1" "%{A1:$COMMAND_3:}" "$desktop" "%{A1}" "$BC" ;;
+						o*|u*)		# show unfocused desktops (occupied or urgent)
+							printf "%s %s %s" "%{A1:$COMMAND_4$desktop:}" "$desktop" "%{A1}" ;;
+						L*)		# show current layout (tiling or monocle)
+							printf "%s %s %s" "%{A1:$COMMAND_5:}" "$desktop" "%{A1}" ;;
+					esac ;
+					shift ;
+				done ;
 			printf "%s\n" "%{A5}%{A4}" ;
 		done ;
 	}
@@ -171,7 +176,7 @@ sp_window_title()
 {
 	COMMAND_1="MonocleSwitcher"
 
-	xtitle -s -t -50 -f "%{A1:$COMMAND_1:}%s%{A1}\n" ;
+	xtitle -s -t -50 -f "$1%{A1:$COMMAND_1:}%s%{A1}\n" ;
 }
 
 sp_xkb_layout()
@@ -179,9 +184,9 @@ sp_xkb_layout()
 	ICON="$FC2%{T2}$FC%{T1}" ;
 	COMMAND_1="xkb-switch -n" ;
 
-	{ xkb-switch ; xkb-switch -W ; } \
-	| while read layout; do
-		printf "%s%s %s%s\n" "%{A1:$COMMAND_1:}" "$ICON" "$layout" "%{A1}" ;
+	while true; do
+		printf "%s%s %s%s\n" "$1%{A1:$COMMAND_1:}" "$ICON" "$(xkb-switch)" "%{A1}" ;
+		xkb-switch -w ;
 	done ;
 }
 
@@ -192,25 +197,13 @@ sp_xkb_layout()
 
 sp_status_modules="
 sp_wifi_once
-sp_separator
 sp_volume_once
-sp_separator
 sp_backlight_once
-sp_separator
 sp_battery_once
-sp_separator
 sp_clock_once
 "
 
 # status line module
-
-sp_status_once()
-{
-	for status_module in $sp_status_modules ; do
-		printf "%s" "$($status_module)" ;
-	done
-	printf "\n" ;
-}
 
 sp_status()
 {
@@ -225,7 +218,11 @@ sp_status()
 	done &
 
 	while read line < "${TMP}update_status_now"; do
-		sp_status_once ;
+		printf "%s" "$1" ;
+		for status_module in $sp_status_modules ; do
+			printf "%s" "$SEPARATOR$($status_module)" ;
+		done
+		printf "\n" ;
 	done ;
 }
 
@@ -430,25 +427,26 @@ fi ;
 
 #### INITIALIZE PANEL ####
 
-if ! [ -d "$TMP" ] ; then		# create directory for temporary files
+# create directory for temporary files
+
+if ! [ -d "$TMP" ] ; then
 	mkdir "$TMP" ;
 fi ;
 
+# set initial empty values
+
 sp_values="" ;
-for module in $sp_modules ; do		# set initial values
-	sp_values="$sp_values\n" ;	# one empty line for a module
+for module in $sp_modules ; do
+	sp_values="$sp_values\n" ;
 done ;
 
+# start modules in the background and pipe them to the panel
+
 i=0 ;
-for module in $sp_modules ; do		# start modules
-	"$module" \
-	| {
-		IFS="\n" ;		# needed to preserve initial and final spaces
-		while read line ; do 
-			printf "%s/%s\n" "$i" "$line" ;	# add module index to the line
-		done ;
-	} &				# spawn processes for modules
-	i=$(($i+1)) ;
+for module in $sp_modules ; do
+	"$module" "$i/" &
+	sleep 0.05 ;
+	i=$(( $i+1 )) ;
 done \
 | { 
 
