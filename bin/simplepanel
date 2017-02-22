@@ -100,7 +100,7 @@ sp_status
 
 # Module definitions
 # Every module gets its index as a positional parameter
-# A module shoud print this index in the beginning of the line
+# A module shoud print this index followed by / in the beginning of the line (echo "$1/some text")
 # If contents of a module do not change (button, separator, etc.) it should print one line and exit
 # If contents of a module change (window title, clock, etc.) it should print one line for every new value
 # The panel updates every time a module prints a line
@@ -111,22 +111,22 @@ sp_main_menu()
 	ICON="${FC2}%{T2} %{T1}${FC}" ;
 	COMMAND_1="morc_menu" ;
 
-	echo "$1%{A1:$COMMAND_1:}${ICON}%{A1}" ;
+	echo "$1/%{A1:$COMMAND_1:}${ICON}%{A1}" ;
 }
 
 sp_separator()
 {
-	echo "$1$SEPARATOR" ;
+	echo "$1/$SEPARATOR" ;
 }
 
 sp_center()
 {
-	echo "$1$CENTER" ;
+	echo "$1/$CENTER" ;
 }
 
 sp_right()
 {
-	echo "$1$RIGHT" ;
+	echo "$1/$RIGHT" ;
 }
 
 sp_bspwm_status()
@@ -145,7 +145,7 @@ sp_bspwm_status()
 		i=$(($i-1)) ;
 	done ;
 	if [ $i -eq 0 ] ; then
-		echo "${index}no bspwm" ;
+		echo "${index}/no bspwm" ;
 		exit ;			# exit if bspwm does not respond
 	fi ;
 
@@ -153,7 +153,7 @@ sp_bspwm_status()
 	| {
 		IFS=':' ;
 		while read line ; do
-			status_line="$index%{A4:$COMMAND_1:}%{A5:$COMMAND_2:}" ;
+			status_line="${index}/%{A4:$COMMAND_1:}%{A5:$COMMAND_2:}" ;
 				set -- $line ;
 				while [ $# -gt 0 ] ; do
 					desktop="${1#?}" ;
@@ -176,7 +176,7 @@ sp_window_title()
 {
 	COMMAND_1="MonocleSwitcher" ;
 
-	xtitle -s -t -50 -f "$1%{A1:$COMMAND_1:}%s%{A1}\n" ;
+	xtitle -s -t -50 -f "$1/%{A1:$COMMAND_1:}%s%{A1}\n" ;
 }
 
 sp_xkb_layout()
@@ -185,7 +185,7 @@ sp_xkb_layout()
 	COMMAND_1="xkb-switch -n" ;
 
 	while true; do
-		echo "$1%{A1:$COMMAND_1:}$ICON $(xkb-switch)%{A1}" ;
+		echo "$1/%{A1:$COMMAND_1:}$ICON $(xkb-switch)%{A1}" ;
 		xkb-switch -w ;
 	done ;
 }
@@ -218,7 +218,7 @@ sp_status()
 	done &
 
 	while read line < "${TMP}update_status_now"; do
-		status_line="$1" ;
+		status_line="$1/" ;
 		for status_module in $sp_status_modules ; do
 			status_line="$status_line$SEPARATOR$($status_module)" ;
 		done
@@ -434,21 +434,33 @@ if ! [ -d "$TMP" ] ; then
 	mkdir "$TMP" ;
 fi ;
 
+if [ -e "${TMP}update_module_now" ] ; then
+	rm "${TMP}update_module_now" ;
+fi ;
+mkfifo "${TMP}update_module_now" ;
+
+
 # set initial empty values
 
+i=0 ;
 for module in $sp_modules ; do
 	sp_values="$sp_values 
 " ;
+#	echo "$i" > "${TMP}update_module_now" ;
+	i=$(( $i+1 )) ;
 done ;
 
 # start modules in the background and pipe them to the panel
 
-i=1 ;
-for module in $sp_modules ; do
-	"$module" "$i/" &
-	i=$(( $i+1 )) ;
-done \
-| { 
+#while read index ; do
+#	set -- $sp_modules ;
+#	shift $(( )) ;
+	i=0 ;
+	for module in $sp_modules ; do
+		"$module" "$i" &
+		i=$(( $i+1 )) ;
+	done \
+| { #done < "${TMP}update_module_now" \
 
 #### UPDATE PANEL ####
 
@@ -458,7 +470,7 @@ IFS='
 		index="${line%%/*}" ;	# get index of the module that needs update
 		set -- $sp_values ;	# set positional parameters to the old values
 		sp_values="" ;		# initial set of new values
-		i=1 ;
+		i=0 ;
 		while [ $# -gt 0 ] ; do				# read the old values
 			if [ $i -eq $index ] ; then
 				value="$line" ;			# replace the value that updates
