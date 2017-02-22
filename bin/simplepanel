@@ -95,6 +95,7 @@ sp_center
 sp_right
 sp_separator
 sp_xkb_layout
+sp_separator
 sp_status
 "
 
@@ -198,7 +199,6 @@ sp_xkb_layout()
 sp_status_modules="
 sp_wifi_once
 sp_volume_once
-sp_backlight_once
 sp_battery_once
 sp_clock_once
 "
@@ -294,21 +294,21 @@ backlight_down()
 	if [ ${BL_STAT%%.*} -gt 6 ] ; then		# make sure backlight is not too low
 		xbacklight -time 10 -steps 10 "-5" ;
 	fi ;
-	printf "\n" > "${TMP}update_status_now" ;
+	echo "$1" > "${TMP}update_module_now" ;
 }
 
 backlight_up()
 {
 	xbacklight -time 10 -steps 10 "+5" ;
-	printf "\n" > "${TMP}update_status_now" ;
+	echo "$1" > "${TMP}update_module_now" ;
 }
 
-sp_backlight_once()
+sp_backlight()
 {
 	ICON="$FC2%{T2}$FC%{T1}" ;
 
-	COMMAND_4="backlight_up" ;
-	COMMAND_5="backlight_down" ;
+	COMMAND_4="backlight_up $1" ;
+	COMMAND_5="backlight_down $1" ;
 
 	if ! [ -e /sys/class/backlight/ ] ; then	# exit if no backlight is present
 		exit ;
@@ -327,7 +327,7 @@ sp_backlight_once()
 		1) BL_BAR='▁' ;;
 		*) BL_BAR=' ' ;;
 	esac ;
-	printf "%s%s %s%s\n" "%{A4:$COMMAND_4:}%{A5:$COMMAND_5:}" "$ICON" "$FC2$BL_BAR$FC" "%{A5}%{A4}" ;
+	echo "$1/%{A4:"$COMMAND_4":}%{A5:"$COMMAND_5":}$ICON $FC2$BL_BAR$FC%{A5}%{A4}" ;
 }
 
 # clock module for status line
@@ -442,25 +442,25 @@ mkfifo "${TMP}update_module_now" ;
 
 # set initial empty values
 
-i=0 ;
 for module in $sp_modules ; do
 	sp_values="$sp_values 
 " ;
-#	echo "$i" > "${TMP}update_module_now" ;
-	i=$(( $i+1 )) ;
 done ;
+
+i=0 ;
+for module in $sp_modules ; do
+	echo "$i" > "${TMP}update_module_now" ;
+	i=$(( $i+1 )) ;
+done &
 
 # start modules in the background and pipe them to the panel
 
-#while read index ; do
-#	set -- $sp_modules ;
-#	shift $(( )) ;
-	i=0 ;
-	for module in $sp_modules ; do
-		"$module" "$i" &
-		i=$(( $i+1 )) ;
-	done \
-| { #done < "${TMP}update_module_now" \
+while read index ; do
+	set -- $sp_modules ;
+	shift $index ;
+	"$1" "$index" &
+done < "${TMP}update_module_now" \
+| { 
 
 #### UPDATE PANEL ####
 
