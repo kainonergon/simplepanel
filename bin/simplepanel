@@ -436,7 +436,6 @@ fi ;
 
 # set initial empty values
 
-sp_values="" ;
 for module in $sp_modules ; do
 	sp_values="$sp_values 
 " ;
@@ -444,10 +443,9 @@ done ;
 
 # start modules in the background and pipe them to the panel
 
-i=0 ;
+i=1 ;
 for module in $sp_modules ; do
 	"$module" "$i/" &
-	sleep 0.05 ;
 	i=$(( $i+1 )) ;
 done \
 | { 
@@ -455,26 +453,26 @@ done \
 #### UPDATE PANEL ####
 
 IFS='
-' ;			# needed to preserve initial and final spaces
+' ;					# needed to preserve initial and final spaces
 	while read line ; do		# update panel every time a module prints a line
 		index="${line%%/*}" ;	# get index of the module that needs update
-		set -- $sp_values ;
-		sp_values="" ;
-		i=0 ;
-		while [ $# -gt 0 ] ; do				# read stored set of values
+		set -- $sp_values ;	# set positional parameters to the old values
+		sp_values="" ;		# initial set of new values
+		i=1 ;
+		while [ $# -gt 0 ] ; do				# read the old values
 			if [ $i -eq $index ] ; then
-				value="$line" ;			# replace appropriate value
+				value="$line" ;			# replace the value that updates
 			else
 				value="$1" ;			# keep all other values
 			fi
-			sp_values="$sp_values$value$IFS" ;	# store new value
-			value="${value#*/}" ;			# remove index from current value
-			printf "%s" "${value}" ;		# print current value
+			sp_values="$sp_values$value$IFS" ;	# store the new value
+			value="${value#*/}" ;			# remove index from the current value
+			printf "%s" "${value}" ;		# print the current value
 			i=$(( $i+1 )) ;
 			shift ;		# remove old stored value
 		done ;
-		printf "\n" ;			# end the line to update lemonbar
-		sleep 0.05 ;			# a delay needed for smooth updates (lemonbar bug?)
+		printf "\n" ;		# end the line to update lemonbar
+		sleep 0.01 ;		# a delay needed for smooth updates (lemonbar bug?)
 	done ;
 } | lemonbar \
 	-g "${SP_WIDTH}x${SP_HEIGHT}${SP_POSITION}" \
