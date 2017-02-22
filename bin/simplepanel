@@ -111,7 +111,7 @@ sp_main_menu()
 	ICON="${FC2}%{T2} %{T1}${FC}" ;
 	COMMAND_1="morc_menu" ;
 
-	printf "%s%s%s\n" "$1%{A1:$COMMAND_1:}" "${ICON}" "%{A1}" ;
+	echo "$1%{A1:$COMMAND_1:}${ICON}%{A1}" ;
 }
 
 sp_separator()
@@ -153,28 +153,28 @@ sp_bspwm_status()
 	| {
 		IFS=':' ;
 		while read line ; do
-			printf "%s" "$index%{A4:$COMMAND_1:}%{A5:$COMMAND_2:}" ; # mouse wheel to switch desktops
+			status_line="$index%{A4:$COMMAND_1:}%{A5:$COMMAND_2:}" ;
 				set -- $line ;
 				while [ $# -gt 0 ] ; do
 					desktop="${1#?}" ;
 					case $1 in
 						O*|F*|U*)	# highlight focused desktop (occupied, free or urgent)
-							printf "%s%s %s %s%s" "$BC1" "%{A1:$COMMAND_3:}" "$desktop" "%{A1}" "$BC" ;;
+							status_line="$status_line$BC1%{A1:$COMMAND_3:} $desktop %{A1}$BC" ;;
 						o*|u*)		# show unfocused desktops (occupied or urgent)
-							printf "%s %s %s" "%{A1:$COMMAND_4$desktop:}" "$desktop" "%{A1}" ;;
+							status_line="$status_line%{A1:$COMMAND_4$desktop:} $desktop %{A1}" ;;
 						L*)		# show current layout (tiling or monocle)
-							printf "%s %s %s" "%{A1:$COMMAND_5:}" "$desktop" "%{A1}" ;;
+							status_line="$status_line%{A1:$COMMAND_5:} $desktop %{A1}" ;;
 					esac ;
 					shift ;
 				done ;
-			printf "%s\n" "%{A5}%{A4}" ;
+			echo "$status_line" ;
 		done ;
 	}
 }
 
 sp_window_title()
 {
-	COMMAND_1="MonocleSwitcher"
+	COMMAND_1="MonocleSwitcher" ;
 
 	xtitle -s -t -50 -f "$1%{A1:$COMMAND_1:}%s%{A1}\n" ;
 }
@@ -185,7 +185,7 @@ sp_xkb_layout()
 	COMMAND_1="xkb-switch -n" ;
 
 	while true; do
-		printf "%s%s %s%s\n" "$1%{A1:$COMMAND_1:}" "$ICON" "$(xkb-switch)" "%{A1}" ;
+		echo "$1%{A1:$COMMAND_1:}$ICON $(xkb-switch)%{A1}" ;
 		xkb-switch -w ;
 	done ;
 }
@@ -218,11 +218,11 @@ sp_status()
 	done &
 
 	while read line < "${TMP}update_status_now"; do
-		printf "%s" "$1" ;
+		status_line="$1" ;
 		for status_module in $sp_status_modules ; do
-			printf "%s" "$SEPARATOR$($status_module)" ;
+			status_line="$status_line$SEPARATOR$($status_module)" ;
 		done
-		printf "\n" ;
+		echo "$status_line" ;
 	done ;
 }
 
@@ -471,7 +471,7 @@ done \
 		done ;
 		printf "\n" ;			# end the line to update lemonbar
 		sp_values="$sp_values_new" ;	# replace old set of values with new one
-		sleep 0.01 ;			# a delay needed for smooth updates (lemonbar bug?)
+		sleep 0.05 ;			# a delay needed for smooth updates (lemonbar bug?)
 	done ;
 } | lemonbar \
 	-g "${SP_WIDTH}x${SP_HEIGHT}${SP_POSITION}" \
