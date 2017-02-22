@@ -425,6 +425,7 @@ fi ;
 ## MAIN ##
 ##########
 
+
 #### INITIALIZE PANEL ####
 
 # create directory for temporary files
@@ -437,7 +438,8 @@ fi ;
 
 sp_values="" ;
 for module in $sp_modules ; do
-	sp_values="$sp_values\n" ;
+	sp_values="$sp_values 
+" ;
 done ;
 
 # start modules in the background and pipe them to the panel
@@ -452,25 +454,26 @@ done \
 
 #### UPDATE PANEL ####
 
-	IFS="\n" ;			# needed to preserve initial and final spaces
+IFS='
+' ;			# needed to preserve initial and final spaces
 	while read line ; do		# update panel every time a module prints a line
 		index="${line%%/*}" ;	# get index of the module that needs update
+		set -- $sp_values ;
+		sp_values="" ;
 		i=0 ;
-		sp_values_new="" ;
-		while [ -n "$sp_values" ] ; do			# read stored set of values
+		while [ $# -gt 0 ] ; do				# read stored set of values
 			if [ $i -eq $index ] ; then
 				value="$line" ;			# replace appropriate value
 			else
-				value="${sp_values%%\\n*}" ;	# keep all other values
+				value="$1" ;			# keep all other values
 			fi
-			sp_values="${sp_values#*\\n}" ;		# remove old stored value
-			sp_values_new="$sp_values_new$value\n" ;	# store new value
+			sp_values="$sp_values$value$IFS" ;	# store new value
 			value="${value#*/}" ;			# remove index from current value
 			printf "%s" "${value}" ;		# print current value
 			i=$(( $i+1 )) ;
+			shift ;		# remove old stored value
 		done ;
 		printf "\n" ;			# end the line to update lemonbar
-		sp_values="$sp_values_new" ;	# replace old set of values with new one
 		sleep 0.05 ;			# a delay needed for smooth updates (lemonbar bug?)
 	done ;
 } | lemonbar \
