@@ -95,7 +95,6 @@ sp_center
 sp_right
 sp_separator
 sp_xkb_layout
-sp_separator
 sp_status
 "
 
@@ -197,6 +196,7 @@ sp_xkb_layout()
 # Set status line structure. Make sure these modules do not loop
 
 sp_status_modules="
+sp_backlight_once
 sp_wifi_once
 sp_volume_once
 sp_battery_once
@@ -207,21 +207,44 @@ sp_clock_once
 
 sp_status()
 {
-	if [ -e "${TMP}update_status_now" ] ; then
-		rm "${TMP}update_status_now" ;
-	fi ;
-	mkfifo "${TMP}update_status_now" ;
+	status_line_index=$1 ;
+	
+	IFS='
+' ;
+
+	for module in $sp_status_modules ; do
+		sp_status_values="$sp_status_values $IFS" ;
+	done ;
 
 	while true ; do
-		printf "\n" > "${TMP}update_status_now" ;
+		i=0 ;
+		for module in $sp_status_modules ; do
+			echo $i > "${TMP}update_status_now" ;
+			i=$(( $i+1 )) ;
+			sleep 0.01 ;
+		done ;
 		sleep "$UPD_INT" ;
 	done &
 
-	while read line < "${TMP}update_status_now"; do
-		status_line="$1/" ;
-		for status_module in $sp_status_modules ; do
-			status_line="$status_line$SEPARATOR$($status_module)" ;
-		done
+	while read index < "${TMP}update_status_now"; do
+		set -- $sp_status_modules ;
+		shift $index ;
+		new_value="$($1 $index)" ;
+		set -- $sp_status_values ;
+		i=0 ;
+		sp_status_values="" ;
+		status_line="$status_line_index/" ;
+		while [ $# -gt 0 ] ; do				# read the old values
+			if [ $i -eq $index ] ; then
+				value="$new_value" ;		# replace the value that updates
+			else
+				value="$1" ;			# keep all other values
+			fi
+			sp_status_values="$sp_status_values$value$IFS" ;	# store the new value
+			status_line="$status_line$SEPARATOR$value" ;		# print the current value
+			i=$(( $i+1 )) ;
+			shift ;		# remove old stored value
+		done ;
 		echo "$status_line" ;
 	done ;
 }
@@ -294,16 +317,16 @@ backlight_down()
 	if [ ${BL_STAT%%.*} -gt 6 ] ; then		# make sure backlight is not too low
 		xbacklight -time 10 -steps 10 "-5" ;
 	fi ;
-	echo "$1" > "${TMP}update_module_now" ;
+	echo "$1" > "${TMP}update_status_now" ;
 }
 
 backlight_up()
 {
 	xbacklight -time 10 -steps 10 "+5" ;
-	echo "$1" > "${TMP}update_module_now" ;
+	echo "$1" > "${TMP}update_status_now" ;
 }
 
-sp_backlight()
+sp_backlight_once()
 {
 	ICON="$FC2%{T2}$FC%{T1}" ;
 
@@ -327,7 +350,7 @@ sp_backlight()
 		1) BL_BAR='▁' ;;
 		*) BL_BAR=' ' ;;
 	esac ;
-	echo "$1/%{A4:"$COMMAND_4":}%{A5:"$COMMAND_5":}$ICON $FC2$BL_BAR$FC%{A5}%{A4}" ;
+	echo "%{A4:$COMMAND_4:}%{A5:$COMMAND_5:}$ICON $FC2$BL_BAR$FC%{A5}%{A4}" ;
 }
 
 # clock module for status line
@@ -339,7 +362,7 @@ show_date_toggle()
 	else
 		touch "${TMP}show_date_toggle" ;
 	fi ;
-	printf "\n" > "${TMP}update_status_now" ;
+	printf "$1\n" > "${TMP}update_status_now" ;
 }
 
 sp_clock_once()
@@ -347,7 +370,7 @@ sp_clock_once()
 	ICON_CLOCK="$FC2%{T2}$FC%{T1}" ;
 	ICON_DATE="$FC2%{T2}$FC%{T1}" ;
 
-	COMMAND_1="show_date_toggle"
+	COMMAND_1="show_date_toggle $1"
 
 	printf "%s" "%{A1:$COMMAND_1:}" ;
 	if [ -f "${TMP}show_date_toggle" ] ; then
@@ -372,19 +395,19 @@ volume_get_state()
 volume_toggle()
 {
 	amixer set Master toggle ;
-	printf "\n" > "${TMP}update_status_now" ;
+	printf "$1\n" > "${TMP}update_status_now" ;
 }
 
 volume_up()
 {
 	amixer set Master 5%+ ;
-	printf "\n" > "${TMP}update_status_now" ;
+	printf "$1\n" > "${TMP}update_status_now" ;
 }
 
 volume_down()
 {
 	amixer set Master 5%- ;
-	printf "\n" > "${TMP}update_status_now" ;
+	printf "$1\n" > "${TMP}update_status_now" ;
 }
 
 sp_volume_once()
@@ -394,10 +417,10 @@ sp_volume_once()
 	ICON_3="$FC2%{T2}$FC%{T1}" ;	# medium
 	ICON_4="$FC2%{T2}$FC%{T1}" ;	# high
 
-	COMMAND_1="volume_toggle" ;
+	COMMAND_1="volume_toggle $1" ;
 	COMMAND_3="terminal -e alsamixer" ;
-	COMMAND_4="volume_up" ;
-	COMMAND_5="volume_down" ;
+	COMMAND_4="volume_up $1" ;
+	COMMAND_5="volume_down $1" ;
 
 	VOL_LEVEL="$(volume_get_level)" ;
 	case $(( $VOL_LEVEL / 11 )) in
@@ -434,11 +457,10 @@ if ! [ -d "$TMP" ] ; then
 	mkdir "$TMP" ;
 fi ;
 
-if [ -e "${TMP}update_module_now" ] ; then
-	rm "${TMP}update_module_now" ;
+if [ -e "${TMP}update_status_now" ] ; then
+	rm "${TMP}update_status_now" ;
 fi ;
-mkfifo "${TMP}update_module_now" ;
-
+mkfifo "${TMP}update_status_now" ;
 
 # set initial empty values
 
@@ -447,19 +469,13 @@ for module in $sp_modules ; do
 " ;
 done ;
 
-i=0 ;
-for module in $sp_modules ; do
-	echo "$i" > "${TMP}update_module_now" ;
-	i=$(( $i+1 )) ;
-done &
-
 # start modules in the background and pipe them to the panel
 
-while read index ; do
-	set -- $sp_modules ;
-	shift $index ;
-	"$1" "$index" &
-done < "${TMP}update_module_now" \
+index=0 ;
+for module in $sp_modules ; do
+	"$module" "$index" &
+	index=$(( $index+1 )) ;
+done \
 | { 
 
 #### UPDATE PANEL ####
