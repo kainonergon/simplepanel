@@ -250,11 +250,11 @@ sp_status()
 # Set status line structure
 
 sp_status_modules="
-sp_backlight_status
-sp_separator_status
 sp_wifi_status
 sp_separator_status
 sp_volume_status
+sp_separator_status
+sp_backlight_status
 sp_separator_status
 sp_battery_status
 sp_separator_status
