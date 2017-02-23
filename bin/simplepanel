@@ -101,7 +101,7 @@ sp_status
 
 # Module definitions
 # Every module gets its index as a positional parameter
-# A module shoud print this index followed by / in the beginning of the line (echo "$1/some text")
+# A module shoud print this index followed by : in the beginning of the line (echo "$1:some text")
 # If contents of a module do not change (button, separator, etc.) it should print one line and exit
 # If contents of a module change (window title, clock, etc.) it should print one line for every new value
 # The panel updates every time a module prints a line
@@ -112,22 +112,22 @@ sp_menu()
 	ICON="${FC2}%{T2} %{T1}${FC}" ;
 	COMMAND_1="morc_menu" ;
 
-	echo "$1/%{A1:$COMMAND_1:}${ICON}%{A1}" ;
+	echo "$1:%{A1:$COMMAND_1:}${ICON}%{A1}" ;
 }
 
 sp_separator()
 {
-	echo "$1/$SEPARATOR" ;
+	echo "$1:$SEPARATOR" ;
 }
 
 sp_center()
 {
-	echo "$1/$CENTER" ;
+	echo "$1:$CENTER" ;
 }
 
 sp_right()
 {
-	echo "$1/$RIGHT" ;
+	echo "$1:$RIGHT" ;
 }
 
 sp_bspwm()
@@ -146,7 +146,7 @@ sp_bspwm()
 		i=$(($i-1)) ;
 	done ;
 	if [ $i -eq 0 ] ; then
-		echo "$module_index/no bspwm" ;
+		echo "$module_index:no bspwm" ;
 		exit ;					# exit if bspwm does not respond
 	fi ;
 
@@ -154,7 +154,7 @@ sp_bspwm()
 	| {
 		IFS=':' ;
 		while read line ; do
-			bspwm_line="$module_index/%{A4:$COMMAND_1:}%{A5:$COMMAND_2:}" ;
+			bspwm_line="$module_index:%{A4:$COMMAND_1:}%{A5:$COMMAND_2:}" ;
 				set -- $line ;
 				while [ $# -gt 0 ] ; do
 					desktop="${1#?}" ;
@@ -177,7 +177,7 @@ sp_title()
 {
 	COMMAND_1="MonocleSwitcher" ;
 
-	format="$1/%{A1:$COMMAND_1:}%s%{A1}\n" ;
+	format="$1:%{A1:$COMMAND_1:}%s%{A1}\n" ;
 	xtitle -s -t -50 -f "$format" ;
 }
 
@@ -187,7 +187,7 @@ sp_xkb()
 	COMMAND_1="xkb-switch -n" ;
 
 	while true; do
-		echo "$1/%{A1:$COMMAND_1:}$ICON $(xkb-switch)%{A1}" ;
+		echo "$1:%{A1:$COMMAND_1:}$ICON $(xkb-switch)%{A1}" ;
 		xkb-switch -w ;
 	done ;
 }
@@ -207,9 +207,9 @@ sp_status()
 	done &
 
 	while read index < "${TMP}update_status_now"; do
+		status_line="$status_line_index:" ;
 		if [ $index = "all" ] ; then			# update all status modules
 			sp_status_values="" ;
-			status_line="$status_line_index/" ;
 			i=0 ;
 			for status_module in $sp_status_modules ; do
 				value="$($status_module $i)" ;
@@ -224,7 +224,6 @@ sp_status()
 			set -- $sp_status_values ;
 			i=0 ;
 			sp_status_values="" ;
-			status_line="$status_line_index/" ;
 			while [ $# -gt 0 ] ; do			# read the old values
 				if [ $i -eq $index ] ; then
 					value="$new_value" ;	# replace the value that updates
@@ -517,8 +516,8 @@ done \
 IFS='
 ' ;					# needed to preserve initial and final spaces
 	while read line ; do		# update panel every time a module prints a line
-		index="${line%%/*}" ;	# get index of the module that needs update
-		new_value="${line#*/}" ;	# get new value of the module that needs update
+		index="${line%%:*}" ;	# get index of the module that needs update
+		new_value="${line#*:}" ;	# get new value of the module that needs update
 		set -- $sp_values ;	# set positional parameters to the old values
 		sp_values="" ;		# initial set of new values
 		panel_line="" ;
@@ -535,7 +534,7 @@ IFS='
 			shift ;
 		done ;
 		echo "$panel_line" ;	# print the panel line to update lemonbar
-		sleep 0.01 ;		# a delay needed for smooth updates (lemonbar bug?)
+		sleep 0.05 ;		# a delay needed for smooth updates (lemonbar bug?)
 	done ;
 } | lemonbar \
 	-g "${SP_WIDTH}x${SP_HEIGHT}${SP_POSITION}" \
