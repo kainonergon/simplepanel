@@ -138,7 +138,7 @@ sp_bspwm()
 	COMMAND_4="bspc desktop -f " ;			# focus desktop
 	COMMAND_5="bspc desktop -l next" ;		# switch to the next layout (tiling or monocle)
 
-	index="$1"
+	module_index="$1"
 
 	i=10 ;
 	while ! bspc wm -g > /dev/null && [ $i -gt 0 ] ; do	# wait while bspwm starts
@@ -146,29 +146,29 @@ sp_bspwm()
 		i=$(($i-1)) ;
 	done ;
 	if [ $i -eq 0 ] ; then
-		echo "${index}/no bspwm" ;
-		exit ;			# exit if bspwm does not respond
+		echo "$module_index/no bspwm" ;
+		exit ;					# exit if bspwm does not respond
 	fi ;
 
 	bspc subscribe \
 	| {
 		IFS=':' ;
 		while read line ; do
-			status_line="${index}/%{A4:$COMMAND_1:}%{A5:$COMMAND_2:}" ;
+			bspwm_line="$module_index/%{A4:$COMMAND_1:}%{A5:$COMMAND_2:}" ;
 				set -- $line ;
 				while [ $# -gt 0 ] ; do
 					desktop="${1#?}" ;
 					case $1 in
 						O*|F*|U*)	# highlight focused desktop (occupied, free or urgent)
-							status_line="$status_line$BC1%{A1:$COMMAND_3:} $desktop %{A1}$BC" ;;
+							bspwm_line="$bspwm_line$BC1%{A1:$COMMAND_3:} $desktop %{A1}$BC" ;;
 						o*|u*)		# show unfocused desktops (occupied or urgent)
-							status_line="$status_line%{A1:$COMMAND_4$desktop:} $desktop %{A1}" ;;
+							bspwm_line="$bspwm_line%{A1:$COMMAND_4$desktop:} $desktop %{A1}" ;;
 						L*)		# show current layout (tiling or monocle)
-							status_line="$status_line%{A1:$COMMAND_5:} $desktop %{A1}" ;;
+							bspwm_line="$bspwm_line%{A1:$COMMAND_5:} $desktop %{A1}" ;;
 					esac ;
 					shift ;
 				done ;
-			echo "$status_line" ;
+			echo "$bspwm_line" ;
 		done ;
 	}
 }
@@ -201,11 +201,7 @@ sp_status()
 	IFS='
 ' ;
 
-	for module in $sp_status_modules ; do
-		sp_status_values="$sp_status_values $IFS" ;
-	done ;
-
-	while true ; do
+	while true ; do						# start timed status line update
 		echo "all" > "${TMP}update_status_now" ;
 		sleep "$UPD_INT" ;
 	done &
@@ -217,8 +213,8 @@ sp_status()
 			i=0 ;
 			for status_module in $sp_status_modules ; do
 				value="$($status_module $i)" ;
-				sp_status_values="$sp_status_values$value$IFS" ;	# store the new value
-				status_line="$status_line$value" ;			# print the current value
+				sp_status_values="$sp_status_values$value$IFS" ;	# store the value
+				status_line="$status_line$value" ;			# add the value to the status line
 				i=$(( $i+1 )) ;
 			done ;
 		else						# update one status module
@@ -229,14 +225,14 @@ sp_status()
 			i=0 ;
 			sp_status_values="" ;
 			status_line="$status_line_index/" ;
-			while [ $# -gt 0 ] ; do				# read the old values
+			while [ $# -gt 0 ] ; do			# read the old values
 				if [ $i -eq $index ] ; then
-					value="$new_value" ;		# replace the value that updates
+					value="$new_value" ;	# replace the value that updates
 				else
-					value="$1" ;			# keep all other values
+					value="$1" ;		# keep all other values
 				fi
-				sp_status_values="$sp_status_values$value$IFS" ;	# store the new value
-				status_line="$status_line$value" ;		# print the current value
+				sp_status_values="$sp_status_values$value$IFS" ;	# store the value
+				status_line="$status_line$value" ;			# add the value to the status line
 				i=$(( $i+1 )) ;
 				shift ;		# remove old stored value
 			done ;
@@ -249,7 +245,7 @@ sp_status()
 # They can be combined into one status line that updates every $UPD_INT seconds
 # First positional parameter is module index
 # Modules for status line do not print their module index
-# If it is redirected to "${TMP}update_status_now" the module updates at once (e.g. volume change)
+# If the index is redirected to "${TMP}update_status_now" the module updates at once (e.g. volume change)
 
 # Set status line structure
 
@@ -267,12 +263,23 @@ sp_clock_status
 
 # wifi module for status line
 
+show_wifi_toggle()
+{
+	if [ -f "${TMP}show_wifi_toggle" ] ; then
+		rm "${TMP}show_wifi_toggle" ;
+	else
+		touch "${TMP}show_wifi_toggle" ;
+	fi ;
+	echo "$1" > "${TMP}update_status_now" ;
+}
+
 sp_wifi_status()
 {
+	COMMAND_1="show_wifi_toggle $1" ;
 	COMMAND_3="terminal -e nmtui" ;		# run network manager text based UI
 
 	WIFI_INT="$(ip link show | awk '/state UP/ {print substr($2, 1, length($2)-1)}')" ;	# wireless interface name
-	printf "%s" "%{A3:$COMMAND_3:}" ;
+	printf "%s" "%{A1:$COMMAND_1:}%{A3:$COMMAND_3:}" ;
 	if [ -d /sys/class/net/${WIFI_INT}/wireless ] && [ "$(cat /sys/class/net/$WIFI_INT/operstate)" != 'down' ] ; then
 		WIFI_QUALITY=$(awk 'NR==3 {print int($3 * 100 / 70)}' /proc/net/wireless) ;
 		WIFI_NAME=$(iwgetid -r) ;
@@ -283,11 +290,14 @@ sp_wifi_status()
 			1)	WIFI_BARS="$FC3▂___$FC" ;;
 			*)	WIFI_BARS="$FC3____$FC" ;;
 		esac ;
-		printf "%s %s" "$WIFI_BARS" "$WIFI_NAME" ;
+		printf "%s" "$WIFI_BARS" ;
+		if [ -f "${TMP}show_wifi_toggle" ] ; then
+			printf "%s" "$WIFI_NAME" ;
+		fi ;
 	else
 		printf "no wifi" ;
 	fi ;
-	printf "%s\n" "%{A3}" ;
+	printf "%s\n" "%{A3}%{A1}" ;
 }
 
 # battery module for status line
@@ -477,6 +487,8 @@ fi ;
 if ! [ -d "$TMP" ] ; then
 	mkdir "$TMP" ;
 fi ;
+
+# create fifo for status line updates
 
 if [ -e "${TMP}update_status_now" ] ; then
 	rm "${TMP}update_status_now" ;
