@@ -55,7 +55,7 @@ SP_FG_COLOR_1="#FFB6B8BA"	# alternative foreground color 1 - light
 SP_FG_COLOR_2="#FF5C616C"	# alternative foreground color 2 - dark
 SP_FG_COLOR_3="red"		# alternative foreground color 3 - urgent
 
-# Set update interval (in seconds) for clock, wifi etc.
+# Set update interval (in seconds) for status line
 
 UPD_INT=3
 
@@ -86,15 +86,16 @@ SEPARATOR="$FC1 ▏$FC"
 # Add your own modules as you wish
 
 sp_modules="
-sp_main_menu
+sp_menu
 sp_separator
-sp_bspwm_status
+sp_bspwm
 sp_separator
-sp_window_title
+sp_title
 sp_center
 sp_right
 sp_separator
-sp_xkb_layout
+sp_xkb
+sp_separator
 sp_status
 "
 
@@ -106,7 +107,7 @@ sp_status
 # The panel updates every time a module prints a line
 # Write your own modules as you wish
 
-sp_main_menu()
+sp_menu()
 {
 	ICON="${FC2}%{T2} %{T1}${FC}" ;
 	COMMAND_1="morc_menu" ;
@@ -129,7 +130,7 @@ sp_right()
 	echo "$1/$RIGHT" ;
 }
 
-sp_bspwm_status()
+sp_bspwm()
 {
 	COMMAND_1="bspc desktop -f next.occupied" ;	# focus next occupied desktop
 	COMMAND_2="bspc desktop -f prev.occupied" ;	# focus previous occupied desktop
@@ -172,14 +173,15 @@ sp_bspwm_status()
 	}
 }
 
-sp_window_title()
+sp_title()
 {
 	COMMAND_1="MonocleSwitcher" ;
 
-	xtitle -s -t -50 -f "$1/%{A1:$COMMAND_1:}%s%{A1}\n" ;
+	format="$1/%{A1:$COMMAND_1:}%s%{A1}\n" ;
+	xtitle -s -t -50 -f "$format" ;
 }
 
-sp_xkb_layout()
+sp_xkb()
 {
 	ICON="$FC2%{T2}$FC%{T1}" ;
 	COMMAND_1="xkb-switch -n" ;
@@ -189,19 +191,6 @@ sp_xkb_layout()
 		xkb-switch -w ;
 	done ;
 }
-
-# Modules with _once in the name do not loop so they can be combined into one status line
-# If combined they will update all together thus using less resources
-
-# Set status line structure. Make sure these modules do not loop
-
-sp_status_modules="
-sp_backlight_once
-sp_wifi_once
-sp_volume_once
-sp_battery_once
-sp_clock_once
-"
 
 # status line module
 
@@ -217,41 +206,68 @@ sp_status()
 	done ;
 
 	while true ; do
-		i=0 ;
-		for module in $sp_status_modules ; do
-			echo $i > "${TMP}update_status_now" ;
-			i=$(( $i+1 )) ;
-			sleep 0.01 ;
-		done ;
+		echo "all" > "${TMP}update_status_now" ;
 		sleep "$UPD_INT" ;
 	done &
 
 	while read index < "${TMP}update_status_now"; do
-		set -- $sp_status_modules ;
-		shift $index ;
-		new_value="$($1 $index)" ;
-		set -- $sp_status_values ;
-		i=0 ;
-		sp_status_values="" ;
-		status_line="$status_line_index/" ;
-		while [ $# -gt 0 ] ; do				# read the old values
-			if [ $i -eq $index ] ; then
-				value="$new_value" ;		# replace the value that updates
-			else
-				value="$1" ;			# keep all other values
-			fi
-			sp_status_values="$sp_status_values$value$IFS" ;	# store the new value
-			status_line="$status_line$SEPARATOR$value" ;		# print the current value
-			i=$(( $i+1 )) ;
-			shift ;		# remove old stored value
-		done ;
+		if [ $index = "all" ] ; then			# update all status modules
+			sp_status_values="" ;
+			status_line="$status_line_index/" ;
+			i=0 ;
+			for status_module in $sp_status_modules ; do
+				value="$($status_module $i)" ;
+				sp_status_values="$sp_status_values$value$IFS" ;	# store the new value
+				status_line="$status_line$value" ;			# print the current value
+				i=$(( $i+1 )) ;
+			done ;
+		else						# update one status module
+			set -- $sp_status_modules ;
+			shift $index ;
+			new_value="$($1 $index)" ;
+			set -- $sp_status_values ;
+			i=0 ;
+			sp_status_values="" ;
+			status_line="$status_line_index/" ;
+			while [ $# -gt 0 ] ; do				# read the old values
+				if [ $i -eq $index ] ; then
+					value="$new_value" ;		# replace the value that updates
+				else
+					value="$1" ;			# keep all other values
+				fi
+				sp_status_values="$sp_status_values$value$IFS" ;	# store the new value
+				status_line="$status_line$value" ;		# print the current value
+				i=$(( $i+1 )) ;
+				shift ;		# remove old stored value
+			done ;
+		fi ;
 		echo "$status_line" ;
 	done ;
 }
 
+# Modules with _status in the name do not loop
+# They can be combined into one status line that updates every $UPD_INT seconds
+# First positional parameter is module index
+# Modules for status line do not print their module index
+# If it is redirected to "${TMP}update_status_now" the module updates at once (e.g. volume change)
+
+# Set status line structure
+
+sp_status_modules="
+sp_backlight_status
+sp_separator_status
+sp_wifi_status
+sp_separator_status
+sp_volume_status
+sp_separator_status
+sp_battery_status
+sp_separator_status
+sp_clock_status
+"
+
 # wifi module for status line
 
-sp_wifi_once()
+sp_wifi_status()
 {
 	COMMAND_3="terminal -e nmtui" ;		# run network manager text based UI
 
@@ -276,7 +292,7 @@ sp_wifi_once()
 
 # battery module for status line
 
-sp_battery_once()
+sp_battery_status()
 {
 	ICON_1="$FC2%{T2}%{T1}$FC" ;	# charging
 	ICON_2="$FC2%{T2}%{T1}$FC" ;	# full
@@ -326,7 +342,7 @@ backlight_up()
 	echo "$1" > "${TMP}update_status_now" ;
 }
 
-sp_backlight_once()
+sp_backlight_status()
 {
 	ICON="$FC2%{T2}$FC%{T1}" ;
 
@@ -365,7 +381,7 @@ show_date_toggle()
 	printf "$1\n" > "${TMP}update_status_now" ;
 }
 
-sp_clock_once()
+sp_clock_status()
 {
 	ICON_CLOCK="$FC2%{T2}$FC%{T1}" ;
 	ICON_DATE="$FC2%{T2}$FC%{T1}" ;
@@ -410,7 +426,7 @@ volume_down()
 	printf "$1\n" > "${TMP}update_status_now" ;
 }
 
-sp_volume_once()
+sp_volume_status()
 {
 	ICON_1="$FC2%{T2}$FC%{T1}" ;	# mute
 	ICON_2="$FC2%{T2}$FC%{T1}" ;	# low
@@ -438,6 +454,11 @@ sp_volume_once()
 		ICON="$ICON_1" ;
 	fi ;
 	printf "%s%s %s%s\n" "%{A1:$COMMAND_1:}%{A3:$COMMAND_3:}%{A4:$COMMAND_4:}%{A5:$COMMAND_5:}" "$ICON" "$FC2$VOL_BAR$FC" "%{A5}%{A4}%{A3}%{A1}" ;
+}
+
+sp_separator_status()
+{
+	echo "$SEPARATOR" ;
 }
 _EOF_
 fi ;
@@ -484,22 +505,23 @@ IFS='
 ' ;					# needed to preserve initial and final spaces
 	while read line ; do		# update panel every time a module prints a line
 		index="${line%%/*}" ;	# get index of the module that needs update
+		new_value="${line#*/}" ;	# get new value of the module that needs update
 		set -- $sp_values ;	# set positional parameters to the old values
 		sp_values="" ;		# initial set of new values
+		panel_line="" ;
 		i=0 ;
 		while [ $# -gt 0 ] ; do				# read the old values
 			if [ $i -eq $index ] ; then
-				value="$line" ;			# replace the value that updates
+				value="$new_value" ;		# replace the value that updates
 			else
 				value="$1" ;			# keep all other values
 			fi
 			sp_values="$sp_values$value$IFS" ;	# store the new value
-			value="${value#*/}" ;			# remove index from the current value
-			printf "%s" "${value}" ;		# print the current value
+			panel_line="$panel_line$value" ;	# and add it to the panel line
 			i=$(( $i+1 )) ;
-			shift ;		# remove old stored value
+			shift ;
 		done ;
-		printf "\n" ;		# end the line to update lemonbar
+		echo "$panel_line" ;	# print the panel line to update lemonbar
 		sleep 0.01 ;		# a delay needed for smooth updates (lemonbar bug?)
 	done ;
 } | lemonbar \
