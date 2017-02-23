@@ -275,11 +275,12 @@ show_wifi_toggle()
 
 sp_wifi_status()
 {
+	ICON="$FC2%{T2}%{T1}$FC" ;
 	COMMAND_1="show_wifi_toggle $1" ;
 	COMMAND_3="terminal -e nmtui" ;		# run network manager text based UI
 
 	WIFI_INT="$(ip link show | awk '/state UP/ {print substr($2, 1, length($2)-1)}')" ;	# wireless interface name
-	printf "%s" "%{A1:$COMMAND_1:}%{A3:$COMMAND_3:}" ;
+	printf "%s" "%{A1:$COMMAND_1:}%{A3:$COMMAND_3:}$ICON " ;
 	if [ -d /sys/class/net/${WIFI_INT}/wireless ] && [ "$(cat /sys/class/net/$WIFI_INT/operstate)" != 'down' ] ; then
 		WIFI_QUALITY=$(awk 'NR==3 {print int($3 * 100 / 70)}' /proc/net/wireless) ;
 		WIFI_NAME=$(iwgetid -r) ;
@@ -292,7 +293,7 @@ sp_wifi_status()
 		esac ;
 		printf "%s" "$WIFI_BARS" ;
 		if [ -f "${TMP}show_wifi_toggle" ] ; then
-			printf "%s" "$WIFI_NAME" ;
+			printf "%s" " $WIFI_NAME" ;
 		fi ;
 	else
 		printf "no wifi" ;
