@@ -343,10 +343,10 @@ backlight_down()
 	if ! [ -z "$(ls /sys/class/backlight/)" ] ; then
 		set -- /sys/class/backlight/* ;
 		BL_STAT=$(( 100 * $(cat $1/actual_brightness) / $(cat $1/max_brightness) )) ;
-		if [ $BL_STAT -gt 10 ] ; then		# make sure backlight is not too low
+		if [ $BL_STAT -gt 12 ] ; then		# make sure backlight is not too low
 			xdotool key XF86MonBrightnessDown ;
-		fi ;
 		echo "$index" > "${TMP}update_status_now" ;
+		fi ;
 	fi ;
 }
 
