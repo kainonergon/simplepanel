@@ -339,16 +339,20 @@ sp_battery_status()
 
 backlight_down()
 {
-	BL_STAT="$(xbacklight -get)" ;
-	if [ ${BL_STAT%%.*} -gt 6 ] ; then		# make sure backlight is not too low
-		xbacklight -time 10 -steps 10 "-5" ;
+	index=$1 ;
+	if ! [ -z "$(ls /sys/class/backlight/)" ] ; then
+		set -- /sys/class/backlight/* ;
+		BL_STAT=$(( 100 * $(cat $1/actual_brightness) / $(cat $1/max_brightness) )) ;
+		if [ $BL_STAT -gt 10 ] ; then		# make sure backlight is not too low
+			xdotool key XF86MonBrightnessDown ;
+		fi ;
+		echo "$index" > "${TMP}update_status_now" ;
 	fi ;
-	echo "$1" > "${TMP}update_status_now" ;
 }
 
 backlight_up()
 {
-	xbacklight -time 10 -steps 10 "+5" ;
+	xdotool key XF86MonBrightnessUp ;
 	echo "$1" > "${TMP}update_status_now" ;
 }
 
@@ -359,12 +363,12 @@ sp_backlight_status()
 	COMMAND_4="backlight_up $1" ;
 	COMMAND_5="backlight_down $1" ;
 
-	if ! [ -e /sys/class/backlight/ ] ; then	# exit if no backlight is present
-		exit ;
+	if [ -z "$(ls /sys/class/backlight/)" ] ; then	# no backlight
+		BL_STAT=-100 ;
+	else
+		set -- /sys/class/backlight/* ;
+		BL_STAT=$(( 100 * $(cat $1/actual_brightness) / $(cat $1/max_brightness) )) ;
 	fi ;
-
-	BL_STAT="$(xbacklight -get)" ;
-	BL_STAT="${BL_STAT%%.*}" ;
 	case $(( $BL_STAT / 11 )) in
 		9|8) BL_BAR='█' ;;
 		7) BL_BAR='▇' ;;
@@ -374,7 +378,8 @@ sp_backlight_status()
 		3) BL_BAR='▃' ;;
 		2) BL_BAR='▂' ;;
 		1) BL_BAR='▁' ;;
-		*) BL_BAR=' ' ;;
+		0) BL_BAR=' ' ;;
+		*) BL_BAR='╳' ;; # no backlight
 	esac ;
 	echo "%{A4:$COMMAND_4:}%{A5:$COMMAND_5:}$ICON $FC2$BL_BAR$FC%{A5}%{A4}" ;
 }
