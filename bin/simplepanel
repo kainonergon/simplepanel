@@ -103,8 +103,8 @@ sp_status
 # Every module gets its index as a positional parameter
 # A module shoud print this index followed by : in the beginning of the line (echo "$1:some text")
 # If contents of a module do not change (button, separator, etc.) it should print one line and exit
-# If contents of a module change (window title, clock, etc.) it should print one line for every new value
-# The panel updates every time a module prints a line
+# If contents of a module change (window title, status line, etc.) it should print one line for every new value
+# The panel updates every time any module prints a line
 # Write your own modules as you wish
 
 sp_menu()
@@ -132,6 +132,21 @@ sp_right()
 
 sp_bspwm()
 {
+	if ! which bspc > /dev/null ; then	# check if bspwm is installed
+		echo "$1:no bspwm" ;
+		exit ;
+	fi ;
+
+	i=50 ;
+	while ! bspc wm -g > /dev/null && [ $i -gt 0 ] ; do	# wait while bspwm starts
+		sleep 0.1 ;
+		i=$(($i-1)) ;
+	done ;
+	if [ $i -eq 0 ] ; then
+		echo "$1:no bspwm" ;
+		exit ;					# exit if bspwm does not respond
+	fi ;
+
 	COMMAND_1="bspc desktop -f next.occupied" ;	# focus next occupied desktop
 	COMMAND_2="bspc desktop -f prev.occupied" ;	# focus previous occupied desktop
 	COMMAND_3="bspc desktop -f last" ;		# focus last focused desktop
@@ -139,16 +154,6 @@ sp_bspwm()
 	COMMAND_5="bspc desktop -l next" ;		# switch to the next layout (tiling or monocle)
 
 	module_index="$1"
-
-	i=10 ;
-	while ! bspc wm -g > /dev/null && [ $i -gt 0 ] ; do	# wait while bspwm starts
-		sleep 0.5 ;
-		i=$(($i-1)) ;
-	done ;
-	if [ $i -eq 0 ] ; then
-		echo "$module_index:no bspwm" ;
-		exit ;					# exit if bspwm does not respond
-	fi ;
 
 	bspc subscribe \
 	| {
@@ -175,6 +180,11 @@ sp_bspwm()
 
 sp_title()
 {
+	if ! which xtitle > /dev/null ; then		# check if xtitle is installed
+		echo "$1:no xtitle" ;
+		exit ;
+	fi ;
+
 	COMMAND_1="MonocleSwitcher" ;
 
 	format="$1:%{A1:$COMMAND_1:}%s%{A1}\n" ;
@@ -183,6 +193,11 @@ sp_title()
 
 sp_xkb()
 {
+	if ! which xkb-switch > /dev/null ; then	# check if xkb-switch is installed
+		echo "$1:no xkb-switch" ;
+		exit ;
+	fi ;
+
 	ICON="$FC2%{T2}$FC%{T1}" ;
 	COMMAND_1="xkb-switch -n" ;
 
@@ -282,7 +297,6 @@ sp_wifi_status()
 	printf "%s" "%{A1:$COMMAND_1:}%{A3:$COMMAND_3:}$ICON " ;
 	if [ -d /sys/class/net/${WIFI_INT}/wireless ] && [ "$(cat /sys/class/net/$WIFI_INT/operstate)" != 'down' ] ; then
 		WIFI_QUALITY=$(awk 'NR==3 {print int($3 * 100 / 70)}' /proc/net/wireless) ;
-		WIFI_NAME=$(iwgetid -r) ;
 		case $(( $WIFI_QUALITY / 20 )) in
 			5|4)	WIFI_BARS="$FC2▂▄▆█$FC" ;;
 			3)	WIFI_BARS="$FC2▂▄▆_$FC" ;;
@@ -291,7 +305,8 @@ sp_wifi_status()
 			*)	WIFI_BARS="$FC3____$FC" ;;
 		esac ;
 		printf "%s" "$WIFI_BARS" ;
-		if [ -f "${TMP}show_wifi_toggle" ] ; then
+		if [ -f "${TMP}show_wifi_toggle" ] && which iwgetid > /dev/null ; then	# check if wifi name should be shown
+			WIFI_NAME=$(iwgetid -r) ;
 			printf "%s" " $WIFI_NAME" ;
 		fi ;
 	else
@@ -339,6 +354,8 @@ sp_battery_status()
 
 backlight_down()
 {
+	if ! which xdotool > \dev\null ; then exit; fi ;	# check if xdotool is installed
+
 	index=$1 ;
 	if ! [ -z "$(ls /sys/class/backlight/)" ] ; then
 		set -- /sys/class/backlight/* ;
@@ -352,6 +369,8 @@ backlight_down()
 
 backlight_up()
 {
+	if ! which xdotool > \dev\null ; then exit; fi ;	# check if xdotool is installed
+
 	xdotool key XF86MonBrightnessUp ;
 	echo "$1" > "${TMP}update_status_now" ;
 }
@@ -443,6 +462,11 @@ volume_down()
 
 sp_volume_status()
 {
+	if ! which amixer > /dev/null ; then		# chech if amixer is installed
+		echo "no amixer" ;
+		exit ;
+	fi ;
+
 	ICON_1="$FC2%{T2}$FC%{T1}" ;	# mute
 	ICON_2="$FC2%{T2}$FC%{T1}" ;	# low
 	ICON_3="$FC2%{T2}$FC%{T1}" ;	# medium
