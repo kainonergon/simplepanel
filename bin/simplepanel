@@ -110,7 +110,7 @@ sp_status
 sp_menu()
 {
 	ICON="${FC2}%{T2} %{T1}${FC}" ;
-	COMMAND_1="morc_menu" ;
+	COMMAND_1="pkill morc_menu ; morc_menu &" ;
 
 	echo "$1:%{A1:$COMMAND_1:}${ICON}%{A1}" ;
 }
