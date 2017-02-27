@@ -354,24 +354,24 @@ sp_battery_status()
 
 backlight_down()
 {
-	if ! which xdotool > \dev\null ; then exit; fi ;	# check if xdotool is installed
+	if ! which xbacklight > \dev\null ; then exit; fi ;	# check if xbacklight is installed
 
 	index=$1 ;
 	if ! [ -z "$(ls /sys/class/backlight/)" ] ; then
 		set -- /sys/class/backlight/* ;
 		BL_STAT=$(( 100 * $(cat $1/actual_brightness) / $(cat $1/max_brightness) )) ;
 		if [ $BL_STAT -gt 12 ] ; then		# make sure backlight is not too low
-			xdotool key XF86MonBrightnessDown ;
-		echo "$index" > "${TMP}update_status_now" ;
+			xbacklight -time 100 -steps 5 -5 ;
+			echo "$index" > "${TMP}update_status_now" ;
 		fi ;
 	fi ;
 }
 
 backlight_up()
 {
-	if ! which xdotool > \dev\null ; then exit; fi ;	# check if xdotool is installed
+	if ! which xbacklight > \dev\null ; then exit; fi ;	# check if xbacklight is installed
 
-	xdotool key XF86MonBrightnessUp ;
+	xbacklight -time 100 -steps 5 +5 ;
 	echo "$1" > "${TMP}update_status_now" ;
 }
 
@@ -383,24 +383,23 @@ sp_backlight_status()
 	COMMAND_5="backlight_down $1" ;
 
 	if [ -z "$(ls /sys/class/backlight/)" ] ; then	# no backlight
-		BL_STAT=-100 ;
+		echo "no backlight" ;
 	else
 		set -- /sys/class/backlight/* ;
 		BL_STAT=$(( 100 * $(cat $1/actual_brightness) / $(cat $1/max_brightness) )) ;
+		case $(( $BL_STAT / 11 )) in
+			9|8) BL_BAR='█' ;;
+			7) BL_BAR='▇' ;;
+			6) BL_BAR='▆' ;;
+			5) BL_BAR='▅' ;;
+			4) BL_BAR='▄' ;;
+			3) BL_BAR='▃' ;;
+			2) BL_BAR='▂' ;;
+			1) BL_BAR='▁' ;;
+			*) BL_BAR=' ' ;;
+		esac ;
+		echo "%{A4:$COMMAND_4:}%{A5:$COMMAND_5:}$ICON $FC2$BL_BAR$FC%{A5}%{A4}" ;
 	fi ;
-	case $(( $BL_STAT / 11 )) in
-		9|8) BL_BAR='█' ;;
-		7) BL_BAR='▇' ;;
-		6) BL_BAR='▆' ;;
-		5) BL_BAR='▅' ;;
-		4) BL_BAR='▄' ;;
-		3) BL_BAR='▃' ;;
-		2) BL_BAR='▂' ;;
-		1) BL_BAR='▁' ;;
-		0) BL_BAR=' ' ;;
-		*) BL_BAR='╳' ;; # no backlight
-	esac ;
-	echo "%{A4:$COMMAND_4:}%{A5:$COMMAND_5:}$ICON $FC2$BL_BAR$FC%{A5}%{A4}" ;
 }
 
 # clock module for status line
