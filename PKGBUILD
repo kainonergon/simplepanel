@@ -16,7 +16,8 @@ optdepends=('bspwm-manjaro: window manager the panel is intended for'
 	'wireless_tools: wifi info'
 	'xtitle: window title info'
 	'xkb-switch-git: keyboard layout indicator'
-	'xorg-xbacklight: backlight control'
+	'light: backlight control'
+	'xorg-xbacklight: alternative backlight control'
 	'alsa-utils: sound volume info')
 makedepends=('git')
 source=("git://github.com/kainonergon/$pkgname")

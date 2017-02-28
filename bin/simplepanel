@@ -354,14 +354,20 @@ sp_battery_status()
 
 backlight_down()
 {
-	if ! which xbacklight > \dev\null ; then exit; fi ;	# check if xbacklight is installed
+	if which light > \dev\null ; then		# check if light is installed
+		COMMAND="light -U 2" ;
+	elif which xbacklight > \dev\null ; then	# check if xbacklight is installed
+		COMMAND="xbacklight -time 20 -steps 2 -2" ;
+	else
+		exit ;
+	fi ;
 
 	index=$1 ;
 	if ! [ -z "$(ls /sys/class/backlight/)" ] ; then
 		set -- /sys/class/backlight/* ;
 		BL_STAT=$(( 100 * $(cat $1/actual_brightness) / $(cat $1/max_brightness) )) ;
 		if [ $BL_STAT -gt 12 ] ; then		# make sure backlight is not too low
-			xbacklight -time 100 -steps 5 -5 ;
+			$COMMAND ;
 			echo "$index" > "${TMP}update_status_now" ;
 		fi ;
 	fi ;
@@ -369,9 +375,15 @@ backlight_down()
 
 backlight_up()
 {
-	if ! which xbacklight > \dev\null ; then exit; fi ;	# check if xbacklight is installed
+	if which light > \dev\null ; then		# check if light is installed
+		COMMAND="light -A 2" ;
+	elif which xbacklight > \dev\null ; then	# check if xbacklight is installed
+		COMMAND="xbacklight -time 20 -steps 2 +2" ;
+	else
+		exit ;
+	fi ;
 
-	xbacklight -time 100 -steps 5 +5 ;
+	$COMMAND ;
 	echo "$1" > "${TMP}update_status_now" ;
 }
 
