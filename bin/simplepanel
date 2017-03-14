@@ -35,7 +35,7 @@ SP_BOTTOM=""	# if set to "-b" panel will be at the bottom of the screen, if set 
 
 # SP_FONT_1="xos4 Terminus:pixelsize=18"			# main font - with xft
 SP_FONT_1='-*-terminus-medium-r-*--18-*-*-*-*-*-iso10646-1'	# without xft
-SP_OFFSET_1=-2
+SP_OFFSET_1=-3
 
 SP_FONT_2="Ionicons:pixelsize=24"				# font for "icons" - with xft
 # SP_FONT_2='-*-ionicons-medium-r-*--24-*-*-*-*-*-iso10646-1'	# without xft
@@ -47,12 +47,12 @@ SP_OFFSET_3=-2
 
 # Set colors
 
-SP_BG_COLOR="#FFEFF0F1"		# default background color
+SP_BG_COLOR="#FF31363B"		# default background color
 SP_BG_COLOR_1="#FF3DAEE9"	# alternative background color
 
-SP_FG_COLOR="#FF101010"		# default foreground color
-SP_FG_COLOR_1="#FFB6B8BA"	# alternative foreground color 1 - light
-SP_FG_COLOR_2="#FF5C616C"	# alternative foreground color 2 - dark
+SP_FG_COLOR="#FFEFEFEF"		# default foreground color
+SP_FG_COLOR_1="#FF696E71"	# alternative foreground color 1 - light
+SP_FG_COLOR_2="#FFD3DAE3"	# alternative foreground color 2 - dark
 SP_FG_COLOR_3="red"		# alternative foreground color 3 - urgent
 
 # Set update interval (in seconds) for status line
@@ -173,7 +173,7 @@ sp_bspwm()
 					esac ;
 					shift ;
 				done ;
-			echo "$bspwm_line" ;
+			echo "$bspwm_line%{A5}%{A4}" ;
 		done ;
 	}
 }
