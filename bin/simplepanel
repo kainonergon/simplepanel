@@ -272,6 +272,8 @@ sp_backlight_status
 sp_separator_status
 sp_battery_status
 sp_separator_status
+sp_weather_status
+sp_separator_status
 sp_clock_status
 "
 
@@ -510,6 +512,15 @@ sp_separator_status()
 {
 	echo "$SEPARATOR" ;
 }
+
+sp_weather_status()
+{
+	ICON="$FC2%{T2}$FC%{T1}" ;
+
+	COMMAND_1='notify-send "$(weather-report -qm)"' ;
+
+	echo "%{A1:$COMMAND_1:}$ICON$(weather-report -qm --headers='Temperature' | cut -d ':' -f 2)%{A1}" ;
+}
 _EOF_
 fi ;
 
@@ -574,7 +585,7 @@ IFS='
 			shift ;
 		done ;
 		echo "$panel_line" ;	# print the panel line to update lemonbar
-		sleep 0.03 ;		# a delay needed for smooth updates (lemonbar bug?)
+		sleep 0.05 ;		# a delay needed for smooth updates (lemonbar bug?)
 	done ;
 } | lemonbar \
 	-g "${SP_WIDTH}x${SP_HEIGHT}${SP_POSITION}" \
