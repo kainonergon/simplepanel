@@ -61,7 +61,7 @@ UPD_INT=3
 
 # Directory for temporary files
 
-TMP="/tmp/simplepanel/"
+TMP="$(mktemp -p /tmp -d simplepanel.XXXX)/"
 
 # Set lemonbar format codes. See more at https://github.com/LemonBoy/bar
 
