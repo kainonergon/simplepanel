@@ -61,7 +61,7 @@ UPD_INT=3
 
 # Directory for temporary files
 
-TMP="$(mktemp -p /tmp -d simplepanel.XXXX)/"
+TMP="/tmp/simplepanel"
 
 # Set lemonbar format codes. See more at https://github.com/LemonBoy/bar
 
@@ -538,6 +538,8 @@ fi ;
 if ! [ -d "$TMP" ] ; then
 	mkdir "$TMP" ;
 fi ;
+
+TMP="$(mktemp -p $TMP -d XXXXX)/"
 
 # create fifo for status line updates
 
