@@ -590,6 +590,7 @@ IFS='
 		sleep 0.05 ;		# a delay needed for smooth updates (lemonbar bug?)
 	done ;
 } | lemonbar \
+	-a 30 \
 	-g "${SP_WIDTH}x${SP_HEIGHT}${SP_POSITION}" \
 	-f "$SP_FONT_1" -o "$SP_OFFSET_1" \
 	-f "$SP_FONT_2" -o "$SP_OFFSET_2" \
