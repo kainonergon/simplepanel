@@ -608,7 +608,7 @@ show_date_toggle()
 	update_now "${1}" ;
 }
 
-calendar_popup()
+calendar_notify()
 {
 	notify-send -i calendar "$(date)" "$(cal --color=always | sed 's/\x1b\[7m/<b><span background=\"#00BCD4\">/;s/\x1b\[27m/<\/span><\/b>/;s/\t//g')" ;
 }
@@ -621,7 +621,7 @@ sp_clock_status()
 	ICON_DATE="" ;
 
 	CMD_1="show_date_toggle ${1}" ;
-	CMD_3="calendar_popup" ;
+	CMD_3="calendar_notify" ;
 
 	current_date="$(date '+%x')" ;
 	current_time="$(date '+%R')" ;
