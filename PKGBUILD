@@ -1,7 +1,7 @@
 # Maintainer: kainonergon @forum.manjaro.org
 
 pkgname=simplepanel
-pkgver=0.5
+pkgver=0.6
 pkgrel=1
 pkgdesc="Lightweight modular panel for bspwm"
 arch=(any)
