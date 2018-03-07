@@ -195,7 +195,8 @@ sp_menu()
 	button	"$1" \
 			"1" \
 			"rofi -show drun -location 1 -lines 28 -width 25" \
-			"$SP%{F#FF35BF5C}%{T3}" ;
+			" ${i_fa_bars}${SP}" ;
+			# "${SP}%{F#FF35BF5C}%{T3}" ;
 }
 
 sp_button_minimize()
