@@ -1,1 +1,1 @@
-## Simplepanel - lightweight modular panel for bspwm
+## Simplepanel - lightweight scriptable panel for bspwm with lemonbar
