@@ -789,7 +789,7 @@ index=0 ;
 for module in $sp_modules ; do
 	"$module" "$index" &
 	index=$(( $index+1 )) ;
-	sleep 0.01 ;
+	sleep 0.001 ;
 done \
 | { 
 
@@ -816,7 +816,7 @@ IFS='
 			shift ;
 		done ;
 		echo "$panel_line" ;	# print the panel line to update lemonbar
-		sleep 0.01 ;
+		sleep 0.001 ;
 	done ;
 } | lemonbar \
 	-a 30 \
