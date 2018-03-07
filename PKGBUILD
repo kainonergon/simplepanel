@@ -8,11 +8,10 @@ arch=(any)
 url="https://github.com/kainonergon/$pkgname"
 license=('MIT')
 depends=('dash'
-	'lemonbar-xft'
-	'ttf-ionicons')
+	'lemonbar-xft')
 optdepends=('bspwm-manjaro: window manager the panel is intended for'
-	'terminus-font: default font'
-	'morc_menu: default main menu'
+	'ttf-nerd-fonts-knack-complete-git: default font'
+	'rofi: default menu'
 	'wireless_tools: wifi info'
 	'xtitle: window title info'
 	'xkb-switch-git: keyboard layout indicator'
