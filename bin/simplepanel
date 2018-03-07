@@ -812,7 +812,7 @@ IFS='
 			shift ;
 		done ;
 		echo "$panel_line" ;	# print the panel line to update lemonbar
-		sleep 0.05 ;		# a delay needed for smooth updates (lemonbar bug?)
+#		sleep 0.05 ;		# a delay needed for smooth updates (lemonbar bug?)
 	done ;
 } | lemonbar \
 	-a 30 \
