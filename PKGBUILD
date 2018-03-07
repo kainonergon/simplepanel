@@ -10,14 +10,18 @@ license=('MIT')
 depends=('dash'
 	'lemonbar-xft')
 optdepends=('bspwm-manjaro: window manager the panel is intended for'
-	'ttf-nerd-fonts-knack-complete-git: default font'
+	'terminus-font: default font'
+	'nerd-fonts-terminus: iconic font'
+	'ttf-nerd-fonts-knack-complete-git: iconic font'
 	'rofi: default menu'
 	'wireless_tools: wifi info'
 	'xtitle: window title info'
 	'xkb-switch-git: keyboard layout indicator'
 	'light: backlight control'
 	'xorg-xbacklight: alternative backlight control'
-	'alsa-utils: sound volume info')
+	'acpilight: alternative backlight control'
+	'alsa-utils: sound volume info'
+	'weather: weather info')
 makedepends=('git')
 source=("git://github.com/kainonergon/$pkgname")
 md5sums=('SKIP')
