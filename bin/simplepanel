@@ -16,7 +16,7 @@ while [ $(pgrep -cx xkb-switch) -gt 0 ] ; do pkill -ox -9 xkb-switch ; done ;
 
 if ! [ -f "$HOME/.simplepanelrc" ] || [ "$1" = '--reset' ] ; then	# write default configuration file
     cat > "$HOME/.simplepanelrc"<<"_EOF_"
-#! /bin/dash
+#!/bin/sh
 #
 # .simplepanelrc
 #
@@ -27,33 +27,10 @@ if ! [ -f "$HOME/.simplepanelrc" ] || [ "$1" = '--reset' ] ; then	# write defaul
 # Set size and position
 
 SP_WIDTH=""
-SP_HEIGHT=28
+SP_HEIGHT=24
 SP_POSITION=""
-SP_BOTTOM=""	# if set to "-b" panel will be at the bottom of the screen, if set to "" - at the top
-
-# Set fonts
-
-# SP_FONT_1="xos4 Terminus:pixelsize=18"			# main font - with xft
-SP_FONT_1='-*-terminus-medium-r-*--18-*-*-*-*-*-iso10646-1'	# without xft
-SP_OFFSET_1=-3
-
-SP_FONT_2="Ionicons:pixelsize=24"				# font for "icons" - with xft
-# SP_FONT_2='-*-ionicons-medium-r-*--24-*-*-*-*-*-iso10646-1'	# without xft
-SP_OFFSET_2=0
-
-SP_FONT_3="mono:pixelsize=18"					# fallback font - with xft
-# SP_FONT_3='-*-dejavu sans mono-medium-r-*--18-*-*-*-*-*-iso10646-1'	# without xft
-SP_OFFSET_3=-2
-
-# Set colors
-
-SP_BG_COLOR="#FF31363B"		# default background color
-SP_BG_COLOR_1="#FF3DAEE9"	# alternative background color
-
-SP_FG_COLOR="#FFEFEFEF"		# default foreground color
-SP_FG_COLOR_1="#FF696E71"	# alternative foreground color 1 - light
-SP_FG_COLOR_2="#FFD3DAE3"	# alternative foreground color 2 - dark
-SP_FG_COLOR_3="red"		# alternative foreground color 3 - urgent
+SP_BOTTOM=""		# panel at the top of the screen
+# SP_BOTTOM="-b"	# panel at the bottom of the screen
 
 # Set update interval (in seconds) for status line
 
@@ -63,21 +40,44 @@ UPD_INT=3
 
 TMP="/tmp/simplepanel"
 
-# Set lemonbar format codes. See more at https://github.com/LemonBoy/bar
+# Set fonts
 
-BC='%{B-}'			# use default background color
-BC1="%{B$SP_BG_COLOR_1}"	# use alternative background color
+SP_FONT_1="Knack Nerd Font:pixelsize=16"		# main font
+SP_OFFSET_1=-1
 
-FC='%{F-}'			# use default foreground color
-FC1="%{F$SP_FG_COLOR_1}"	# use alternative foreground color 1 - light
-FC2="%{F$SP_FG_COLOR_2}"	# use alternative foreground color 2 - dark
-FC3="%{F$SP_FG_COLOR_3}"	# use alternative foreground color 3 - urgent
+SP_FONT_2="Knack Nerd Font:pixelsize=16"		# iconic font
+SP_OFFSET_2=-1
 
-LEFT="%{c}"			# left text alignment
-CENTER="%{c}"			# center text alignment
-RIGHT="%{r}"			# right text alignment
+SP_FONT_3="font\-logos:pixelsize=22"			# extra font
+SP_OFFSET_3=1
 
-SEPARATOR="$FC1 ▏$FC"
+# Load Nerd Font icon names. See https://github.com/ryanoasis/nerd-fonts/tree/master/bin/scripts/lib
+
+. ~/.bin/i_fa.sh		# Icon names for font awesome
+. ~/.bin/i_fae.sh		# Icon names for font awesome extension
+#. ~/.bin/i_linux.sh	# Icon names for linux logos
+
+# Set colors and lemonbar format codes. See more at https://github.com/LemonBoy/bar
+# Adapta dark
+
+SP_BG_COLOR='#FF222D32'		# default background color
+
+BC='%{B-}'					# use default background color
+BC1='%{B#FF00BCD4}'			# use alternative background color / highlight
+
+SP_FG_COLOR='#FFEFEFEF'		# default foreground color
+
+FC='%{F-}'					# use default foreground color	- text
+FC1='%{F#FF3A464B}'			# use foreground color 1		- separator
+FC2='%{F#FFCFD8DC}'			# use foreground color 2		- icons
+FC3='%{Fred}'				# use foreground color 3		- urgent
+
+ICO="${FC2}%{T2}"			# use icon color and font
+TXT='%{F-}%{T1}'			# use text color and font
+
+SP="%{O4}"					# small space
+
+SEPARATOR="${SP}${FC1}%{R}%{O1}%{R}${FC}${SP}"
 
 # Set panel structure
 # Provide a string with a list of panel modules (blocks)
@@ -89,15 +89,19 @@ sp_modules="
 sp_menu
 sp_separator
 sp_bspwm
-sp_separator
 sp_title
-sp_center
 sp_right
+sp_button_close
 sp_separator
 sp_xkb
 sp_separator
 sp_status
+sp_padding
 "
+#sp_button_minimize
+#sp_button_maximize
+#sp_center
+#sp_separator
 
 # Module definitions
 # Every module gets its index as a positional parameter
@@ -107,12 +111,38 @@ sp_status
 # The panel updates every time any module prints a line
 # Write your own modules as you wish
 
-sp_menu()
-{
-	ICON="${FC2}%{T2} %{T1}${FC}" ;
-	COMMAND_1="pkill morc_menu ; morc_menu &" ;
+# general purpose functions to use in modules
 
-	echo "$1:%{A1:$COMMAND_1:}${ICON}%{A1}" ;
+begin_module ()		# start module; 1 parameter module_index
+{
+	printf "%s" "${1}:" ;
+}
+
+end_module ()		# finish module
+{
+	printf "\n" ;
+}
+
+begin_click()	# must be nested with end_click; 2 parameters: mouse_button_number command
+{
+	printf "%s" "%{A${1}:${2}:}" ;
+}
+
+end_click()		# must be nested with begin_click; 1 parameter: mouse_button_number
+{
+	printf "%s" "%{A${1}}" ;
+}
+
+print_icon()	# use icon color and font; 1 parameter: icon
+{
+	printf "%s" "${ICO}${1}${TXT}" ;
+}
+
+# formatting modules
+
+sp_padding()
+{
+	echo "$1:$SP" ;
 }
 
 sp_separator()
@@ -122,36 +152,88 @@ sp_separator()
 
 sp_center()
 {
-	echo "$1:$CENTER" ;
+	echo "$1:%{c}" ;
 }
 
 sp_right()
 {
-	echo "$1:$RIGHT" ;
+	echo "$1:%{r}" ;
 }
+
+# button modules
+
+button()	# generic button module; 4 parameters: module_index mouse_button_number command icon
+{
+	begin_module "${1}" ; 
+		begin_click "${2}" "${3}" ;
+			print_icon "${4}" ;
+		end_click "${2}" ;
+	end_module ;
+}
+
+sp_menu()
+{
+	button	"$1" \
+			"1" \
+			"rofi -show drun -location 1 -lines 28 -width 25" \
+			"$SP%{F#FF35BF5C}%{T3}" ;
+}
+
+sp_button_minimize()
+{
+	button	"$1" \
+			"1" \
+			"whid hide" \
+			"${SP}${i_fa_window_minimize}" ;
+}
+
+sp_button_maximize()
+{
+	button	"$1" \
+			"1" \
+			"bspc desktop -l next" \
+			"${SP}${i_fa_window_maximize}" ;
+}
+
+sp_button_close()
+{
+	button	"$1" \
+			"1" \
+			"bspc node -c" \
+			"${SP}${i_fa_close}" ;
+}
+
+# bspwm module
 
 sp_bspwm()
 {
 	if ! which bspc > /dev/null ; then	# check if bspwm is installed
-		echo "$1:no bspwm" ;
+		begin_module "${1}" ;
+			printf "%s" "no bspwm" ;
+		end_module ;
 		exit ;
 	fi ;
 
-	i=50 ;
+	i=10 ;
 	while ! bspc wm -g > /dev/null && [ $i -gt 0 ] ; do	# wait while bspwm starts
-		sleep 0.1 ;
-		i=$(($i-1)) ;
+		sleep 0.5 ;
+		i=$(( $i - 1 )) ;
 	done ;
 	if [ $i -eq 0 ] ; then
-		echo "$1:no bspwm" ;
+		begin_module "${1}" ;
+			printf "%s" "no bspwm" ;
+		end_module ;
 		exit ;					# exit if bspwm does not respond
 	fi ;
 
-	COMMAND_1="bspc desktop -f next.occupied" ;	# focus next occupied desktop
-	COMMAND_2="bspc desktop -f prev.occupied" ;	# focus previous occupied desktop
-	COMMAND_3="bspc desktop -f last" ;		# focus last focused desktop
-	COMMAND_4="bspc desktop -f " ;			# focus desktop
-	COMMAND_5="bspc desktop -l next" ;		# switch to the next layout (tiling or monocle)
+	CMD_NEXT="bspc desktop -f next.occupied" ;	# focus next occupied desktop
+	CMD_PREV="bspc desktop -f prev.occupied" ;	# focus previous occupied desktop
+	CMD_LAST="bspc desktop -f last" ;			# focus last focused desktop
+	CMD_FOCUS="bspc desktop -f " ;				# focus desktop
+	CMD_LAYOUT="bspc desktop -l next" ;			# switch to the next layout (tiling or monocle)
+
+	ICON_TIL=" ${i_fa_window_restore}" ;
+	ICON_MON=" ${i_fa_window_maximize}%{O1}" ;
 
 	module_index="$1"
 
@@ -159,17 +241,22 @@ sp_bspwm()
 	| {
 		IFS=':' ;
 		while read line ; do
-			bspwm_line="$module_index:%{A4:$COMMAND_1:}%{A5:$COMMAND_2:}" ;
+			bspwm_line="$module_index:%{A4:$CMD_NEXT:}%{A5:$CMD_PREV:}" ;
 				set -- $line ;
 				while [ $# -gt 0 ] ; do
 					desktop="${1#?}" ;
 					case $1 in
 						O*|F*|U*)	# highlight focused desktop (occupied, free or urgent)
-							bspwm_line="$bspwm_line$BC1%{A1:$COMMAND_3:} $desktop %{A1}$BC" ;;
+							bspwm_line="${bspwm_line}%{A1:$CMD_LAST:}${BC1}${SP}${desktop}${SP}${BC}%{A1}" ;;
 						o*|u*)		# show unfocused desktops (occupied or urgent)
-							bspwm_line="$bspwm_line%{A1:$COMMAND_4$desktop:} $desktop %{A1}" ;;
+							bspwm_line="${bspwm_line}%{A1:$CMD_FOCUS$desktop:}${SP}${desktop}${SP}%{A1}" ;;
 						L*)		# show current layout (tiling or monocle)
-							bspwm_line="$bspwm_line%{A1:$COMMAND_5:} $desktop %{A1}" ;;
+							case $desktop in
+								T)	layout_ind="${ICO}${ICON_TIL}${TXT}" ;;
+								M)	layout_ind="${ICO}${ICON_MON}${TXT}" ;;
+								*)	layout_ind="${SP}${desktop}${SP}" ;;
+							esac ;
+							bspwm_line="${bspwm_line}%{A1:$CMD_LAYOUT:}${layout_ind}%{A1}" ;;
 					esac ;
 					shift ;
 				done ;
@@ -181,28 +268,38 @@ sp_bspwm()
 sp_title()
 {
 	if ! which xtitle > /dev/null ; then		# check if xtitle is installed
-		echo "$1:no xtitle" ;
+		begin_module "${1}" ;
+			printf "%s" "no xtitle" ;
+		end_module ;
 		exit ;
 	fi ;
 
 	COMMAND_1="MonocleSwitcher" ;
+	FORMAT="$1:%{A1:$COMMAND_1:} %s%{A1}\n" ;
 
-	format="$1:%{A1:$COMMAND_1:}%s%{A1}\n" ;
-	xtitle -s -t -50 -f "$format" ;
+	xtitle -s -t -70 -f "$FORMAT" ;
 }
 
 sp_xkb()
 {
 	if ! which xkb-switch > /dev/null ; then	# check if xkb-switch is installed
-		echo "$1:no xkb-switch" ;
+		begin_module "${1}" ;
+			printf "no xkb-switch" ;
+		end_module :
 		exit ;
 	fi ;
 
-	ICON="$FC2%{T2}$FC%{T1}" ;
+	ICON="" ; # "${SP}${i_fa_keyboard_o}" ;
 	COMMAND_1="xkb-switch -n" ;
 
 	while true; do
-		echo "$1:%{A1:$COMMAND_1:}$ICON $(xkb-switch)%{A1}" ;
+		label="$(xkb-switch)"
+		begin_module "${1}" ;
+			begin_click "1" "${COMMAND_1}" ;
+				print_icon "${ICON}" ;
+				printf "%s" "${label}" ;
+			end_click "1" ;
+		end_module ;
 		xkb-switch -w ;
 	done ;
 }
@@ -276,80 +373,138 @@ sp_weather_status
 sp_separator_status
 sp_clock_status
 "
+#sp_separator_status
+#sp_weather_status
+
+# general purpose functions to use in status line modules
+
+begin_status_module ()
+{
+	true ;
+}
+
+end_status_module ()
+{
+	printf "\n" ;
+}
+
+update_now ()	# 1 parameter: module_index
+{
+	echo "${1}" > "${TMP}update_status_now" ;
+}
+
+toggle_flag ()	# 1 parameter: flag_name
+{
+	if [ -f "${TMP}${1}" ] ; then
+		rm "${TMP}${1}" ;
+	else
+		touch "${TMP}${1}" ;
+	fi ;
+}
+
+check_flag ()	# 1 parameter: flag_name
+{
+	[ -f "${TMP}${1}" ] ;
+}
 
 # wifi module for status line
 
 show_wifi_toggle()
 {
-	if [ -f "${TMP}show_wifi_toggle" ] ; then
-		rm "${TMP}show_wifi_toggle" ;
-	else
-		touch "${TMP}show_wifi_toggle" ;
-	fi ;
-	echo "$1" > "${TMP}update_status_now" ;
+	toggle_flag "show_wifi" ;
+	update_now "${1}" ;
 }
 
 sp_wifi_status()
 {
-	ICON="$FC2%{T2}%{T1}$FC" ;
-	COMMAND_1="show_wifi_toggle $1" ;
-	COMMAND_3="terminal -e nmtui" ;		# run network manager text based UI
+	# ICON="${SP}${i_fa_wifi}${SP}" ;
+	ICON="" ;
 
-	WIFI_INT="$(ip link show | awk '/state UP/ {print substr($2, 1, length($2)-1)}')" ;	# wireless interface name
-	printf "%s" "%{A1:$COMMAND_1:}%{A3:$COMMAND_3:}$ICON " ;
-	if [ -d /sys/class/net/${WIFI_INT}/wireless ] && [ "$(cat /sys/class/net/$WIFI_INT/operstate)" != 'down' ] ; then
-		WIFI_QUALITY=$(awk 'NR==3 {print int($3 * 100 / 70)}' /proc/net/wireless) ;
-		case $(( $WIFI_QUALITY / 20 )) in
-			5|4)	WIFI_BARS="$FC2▂▄▆█$FC" ;;
-			3)	WIFI_BARS="$FC2▂▄▆_$FC" ;;
-			2)	WIFI_BARS="$FC2▂▄__$FC" ;;
-			1)	WIFI_BARS="$FC3▂___$FC" ;;
-			*)	WIFI_BARS="$FC3____$FC" ;;
+	CMD_1="show_wifi_toggle ${1}" ;
+	CMD_3="networkmanager_dmenu" ;
+
+	# get wireless interface name
+	wifi_int="$(ip link show | awk '/state UP/ {print substr($2, 1, length($2)-1)}')" ;
+
+	if [ -d /sys/class/net/${wifi_int}/wireless ] && [ "$(cat /sys/class/net/${wifi_int}/operstate)" != 'down' ] ; then
+		wifi_quality=$(awk 'NR==3 {print int($3 * 100 / 70)}' /proc/net/wireless) ;
+		case $(( ${wifi_quality} / 20 )) in
+			5|4)	label="${FC2}▂▄▆█${FC}" ;;
+			3)		label="${FC2}▂▄▆_${FC}" ;;
+			2)		label="${FC2}▂▄__${FC}" ;;
+			1)		label="${FC3}▂___${FC}" ;;
+			*)		label="${FC3}____${FC}" ;;
 		esac ;
-		printf "%s" "$WIFI_BARS" ;
-		if [ -f "${TMP}show_wifi_toggle" ] && which iwgetid > /dev/null ; then	# check if wifi name should be shown
-			WIFI_NAME=$(iwgetid -r) ;
-			printf "%s" " $WIFI_NAME" ;
+
+		# check if wifi name should be shown
+		if check_flag "show_wifi" && which iwgetid > /dev/null ; then
+			wifi_name="$(iwgetid -r)" ;
+			label="${label}${SP}${wifi_name}" ;
 		fi ;
 	else
-		printf "no wifi" ;
+		label="no wifi" ;
 	fi ;
-	printf "%s\n" "%{A3}%{A1}" ;
+	
+	begin_status_module ;
+		begin_click "1" "${CMD_1}" ;
+			begin_click "3" "${CMD_3}" ;
+				print_icon "${ICON}" ;
+				printf "%s" "${label}" ;
+			end_click "3" ;
+		end_click "1" ;
+	end_status_module ;
 }
 
 # battery module for status line
 
 sp_battery_status()
 {
-	ICON_1="$FC2%{T2}%{T1}$FC" ;	# charging
-	ICON_2="$FC2%{T2}%{T1}$FC" ;	# full
-	ICON_3="$FC2%{T2}%{T1}$FC" ;	# almost full
-	ICON_4="$FC2%{T2}%{T1}$FC" ;	# almost empty
-	ICON_5="$FC3%{T2}%{T1}$FC" ;	# empty
+	ICON_0="${FC3}${SP}${i_fa_battery_0}" ;	# empty
+	ICON_1="${FC3}${SP}${i_fa_battery_1}" ;	# almost empty
+	ICON_2="${SP}${i_fa_battery_2}" ;		# half
+	ICON_3="${SP}${i_fa_battery_3}" ;		# almost full
+	ICON_4="${SP}${i_fa_battery_4}" ;		# full
+	ICON_C="${SP}${i_fa_plug}%{O2}" ;		# charging
 
-	COMMAND_3="xfce4-power-manager -c" ;
-	COMMAND_4="backlight_up" ;
-	COMMAND_5="backlight_down" ;
+	CMD_3="xfce4-power-manager -c" ;
+	CMD_4="backlight_up" ;
+	CMD_5="backlight_down" ;
 
 	if !  [ -e /sys/class/power_supply/BAT*/ ] ; then
 		exit ;
 	fi ;
 
-	BAT_CAP="$(cat /sys/class/power_supply/BAT*/capacity)" ;
-	BAT_STAT="$(cat /sys/class/power_supply/BAT*/status)" ;
+	bat_cap="$(cat /sys/class/power_supply/BAT*/capacity)" ;
+	bat_stat="$(cat /sys/class/power_supply/BAT*/status)" ;
 
-	printf "%s" "%{A3:$COMMAND_3:}%{A4:$COMMAND_4:}%{A5:$COMMAND_5:}" ;
-	if [ "$BAT_STAT" = "Charging" ] ; then
-		printf "%s" "$ICON_1 $BAT_CAP%" ;
+	if [ "${bat_stat}" = "Charging" ] ; then
+		icon="${ICON_C}" ;
+		label="${SP}${bat_cap}%" ;
 	else
-		case $(( $BAT_CAP / 25 )) in
-			4|3)	printf "%s" "$ICON_2 $BAT_CAP%" ;;
-			2)	printf "%s" "$ICON_3 $BAT_CAP%" ;;
-			1)	printf "%s" "$ICON_4 $BAT_CAP%" ;;
-			*)	printf "%s" "$ICON_5 $BAT_CAP%" ;;
+		case $(( ${bat_cap} / 21 )) in
+			0)	icon="${ICON_0}" ;;
+			1)	icon="${ICON_1}" ;;
+			2)	icon="${ICON_2}" ;;
+			3)	icon="${ICON_3}" ;;
+			4)	icon="${ICON_4}" ;;
 		esac ;
+		if [ "$bat_cap" -lt 97 ] ; then
+			label="${SP}${bat_cap}%" ;
+		else 
+			label="" ;
+		fi ;
 	fi ;
-	printf "%s\n" "%{A5}%{A4}%{A3}" ;
+	
+	begin_status_module ;
+		begin_click "3" "${CMD_3}" ;
+			begin_click "4" "${CMD_4}" ;
+				begin_click "5" "${CMD_5}" ;
+					print_icon "${icon}" ;
+					printf "%s" "${label}" ;
+				end_click "5" ;
+			end_click "4" ;
+		end_click "3" ;
+	end_status_module ;
 }
 
 # backlight module for status line
@@ -364,13 +519,13 @@ backlight_down()
 		exit ;
 	fi ;
 
-	index=$1 ;
+	index=${1} ;
 	if ! [ -z "$(ls /sys/class/backlight/)" ] ; then
 		set -- /sys/class/backlight/* ;
 		BL_STAT=$(( 100 * $(cat $1/actual_brightness) / $(cat $1/max_brightness) )) ;
 		if [ $BL_STAT -gt 12 ] ; then		# make sure backlight is not too low
 			$COMMAND ;
-			echo "$index" > "${TMP}update_status_now" ;
+			update_now "${index}" ;
 		fi ;
 	fi ;
 }
@@ -386,61 +541,83 @@ backlight_up()
 	fi ;
 
 	$COMMAND ;
-	echo "$1" > "${TMP}update_status_now" ;
+	update_now "${1}" ;
 }
 
 sp_backlight_status()
 {
-	ICON="$FC2%{T2}$FC%{T1}" ;
+	ICON="${SP}${i_fa_sun_o}" ;
 
-	COMMAND_4="backlight_up $1" ;
-	COMMAND_5="backlight_down $1" ;
+	CMD_4="backlight_up $1" ;
+	CMD_5="backlight_down $1" ;
 
 	if [ -z "$(ls /sys/class/backlight/)" ] ; then	# no backlight
-		echo "no backlight" ;
+		label="no backlight" ;
 	else
 		set -- /sys/class/backlight/* ;
-		BL_STAT=$(( 100 * $(cat $1/actual_brightness) / $(cat $1/max_brightness) )) ;
-		case $(( $BL_STAT / 11 )) in
-			9|8) BL_BAR='█' ;;
-			7) BL_BAR='▇' ;;
-			6) BL_BAR='▆' ;;
-			5) BL_BAR='▅' ;;
-			4) BL_BAR='▄' ;;
-			3) BL_BAR='▃' ;;
-			2) BL_BAR='▂' ;;
-			1) BL_BAR='▁' ;;
-			*) BL_BAR=' ' ;;
+		bl_stat="$(( 100 * $(cat ${1}/actual_brightness) / $(cat ${1}/max_brightness) ))" ;
+		case $(( $bl_stat / 11 )) in
+			9|8)	label='█' ;;
+			7)		label='▇' ;;
+			6)		label='▆' ;;
+			5)		label='▅' ;;
+			4)		label='▄' ;;
+			3)		label='▃' ;;
+			2)		label='▂' ;;
+			1)		label='▁' ;;
+			*)		label=' ' ;;
 		esac ;
-		echo "%{A4:$COMMAND_4:}%{A5:$COMMAND_5:}$ICON $FC2$BL_BAR$FC%{A5}%{A4}" ;
 	fi ;
+
+	begin_status_module ;
+		begin_click "4" "${CMD_4}" ;
+			begin_click "5" "${CMD_5}" ;
+				print_icon "${ICON}" ;
+				printf "%s" "${SP}${FC2}${label}${FC}"
+			end_click "5" ;
+		end_click "4" ;
+	end_status_module ;
 }
 
 # clock module for status line
 
 show_date_toggle()
 {
-	if [ -f "${TMP}show_date_toggle" ] ; then
-		rm "${TMP}show_date_toggle" ;
-	else
-		touch "${TMP}show_date_toggle" ;
-	fi ;
-	printf "$1\n" > "${TMP}update_status_now" ;
+	toggle_flag "show_date" ;
+	update_now "${1}" ;
+}
+
+calendar_popup()
+{
+	notify-send -i calendar "$(date)" "$(cal --color=always | sed 's/\x1b\[7m/<b><span background=\"#00BCD4\">/;s/\x1b\[27m/<\/span><\/b>/;s/\t//g')" ;
 }
 
 sp_clock_status()
 {
-	ICON_CLOCK="$FC2%{T2}$FC%{T1}" ;
-	ICON_DATE="$FC2%{T2}$FC%{T1}" ;
+	# ICON_TIME="${SP}${i_fa_clock_o}${SP}" ;
+	ICON_TIME="" ;
+	# ICON_DATE="${SP}${i_fa_calendar_o}${SP}" ;
+	ICON_DATE= "" ;
 
-	COMMAND_1="show_date_toggle $1"
+	CMD_1="show_date_toggle ${1}" ;
+	CMD_3="calendar_popup" ;
 
-	printf "%s" "%{A1:$COMMAND_1:}" ;
-	if [ -f "${TMP}show_date_toggle" ] ; then
-		printf "%s %s%s" "$ICON_DATE" "$(date '+%x')" "$SEPARATOR" ;	# print date
-	fi ;
+	current_date="$(date '+%x')" ;
+	current_time="$(date '+%R')" ;
 
-	printf "%s %s %s\n" "$ICON_CLOCK" "$(date '+%R')" "%{A1}" ;		# print time
+	begin_status_module ;
+		begin_click "1" "${CMD_1}" ;
+			begin_click "3" "${CMD_3}" ;
+				# check if date should be shown
+				if check_flag "show_date" ; then
+					print_icon "${ICON_DATE}" ;
+					printf "%s" "${current_date}${SEPARATOR}" ;
+				fi ;
+				print_icon "${ICON_TIME}" ;
+				printf "%s" "${current_time}" ;
+			end_click "3" ;
+		end_click "1" ;
+	end_status_module ;
 }
 
 # sound volume module for status line
@@ -458,19 +635,19 @@ volume_get_state()
 volume_toggle()
 {
 	amixer set Master toggle ;
-	printf "$1\n" > "${TMP}update_status_now" ;
+	update_now "${1}" ;
 }
 
 volume_up()
 {
 	amixer set Master 5%+ ;
-	printf "$1\n" > "${TMP}update_status_now" ;
+	update_now "${1}" ;
 }
 
 volume_down()
 {
 	amixer set Master 5%- ;
-	printf "$1\n" > "${TMP}update_status_now" ;
+	update_now "${1}" ;
 }
 
 sp_volume_status()
@@ -480,32 +657,46 @@ sp_volume_status()
 		exit ;
 	fi ;
 
-	ICON_1="$FC2%{T2}$FC%{T1}" ;	# mute
-	ICON_2="$FC2%{T2}$FC%{T1}" ;	# low
-	ICON_3="$FC2%{T2}$FC%{T1}" ;	# medium
-	ICON_4="$FC2%{T2}$FC%{T1}" ;	# high
+	ICON_0="%{O1}" ;							# mute
+	ICON_1="%{O-2}${i_fa_volume_off}%{O8}" ;	# low
+	ICON_2="%{O-1}${i_fa_volume_down}%{O5}" ;	# medium
+	ICON_3="%{O2}${i_fa_volume_up}" ;			# high
 
-	COMMAND_1="volume_toggle $1" ;
-	COMMAND_3="terminal -e alsamixer" ;
-	COMMAND_4="volume_up $1" ;
-	COMMAND_5="volume_down $1" ;
+	CMD_1="volume_toggle $1" ;
+	CMD_3="terminal -e alsamixer" ;
+	CMD_4="volume_up $1" ;
+	CMD_5="volume_down $1" ;
 
-	VOL_LEVEL="$(volume_get_level)" ;
-	case $(( $VOL_LEVEL / 11 )) in
-		9|8) VOL_BAR='█'; ICON="$ICON_4" ;;
-		7) VOL_BAR='▇'	; ICON="$ICON_4" ;;
-		6) VOL_BAR='▆'	; ICON="$ICON_4" ;;
-		5) VOL_BAR='▅'	; ICON="$ICON_3" ;;
-		4) VOL_BAR='▄'	; ICON="$ICON_3" ;;
-		3) VOL_BAR='▃'	; ICON="$ICON_3" ;;
-		2) VOL_BAR='▂'	; ICON="$ICON_2" ;;
-		1) VOL_BAR='▁'	; ICON="$ICON_2" ;;
-		*) VOL_BAR=' '	; ICON="$ICON_2" ;;
+	vol_level="$(volume_get_level)" ;
+	case $(( ${vol_level} / 11 )) in
+		9|8)	label='█'	; icon="$ICON_3" ;;
+		7)		label='▇'	; icon="$ICON_3" ;;
+		6)		label='▆'	; icon="$ICON_3" ;;
+		5)		label='▅'	; icon="$ICON_2" ;;
+		4)		label='▄'	; icon="$ICON_2" ;;
+		3)		label='▃'	; icon="$ICON_2" ;;
+		2)		label='▂'	; icon="$ICON_1" ;;
+		1)		label='▁'	; icon="$ICON_1" ;;
+		*)		label=' '	; icon="$ICON_1" ;;
 	esac ;
+	
+	# check if sound is mute
 	if [ "$(volume_get_state)" = "off" ] ; then
-		ICON="$ICON_1" ;
+		icon="$ICON_0" ;
 	fi ;
-	printf "%s%s %s%s\n" "%{A1:$COMMAND_1:}%{A3:$COMMAND_3:}%{A4:$COMMAND_4:}%{A5:$COMMAND_5:}" "$ICON" "$FC2$VOL_BAR$FC" "%{A5}%{A4}%{A3}%{A1}" ;
+
+	begin_status_module ;
+		begin_click "1" "${CMD_1}" ;
+			begin_click "3" "${CMD_3}" ;
+				begin_click "4" "${CMD_4}" ;
+					begin_click "5" "${CMD_5}" ;
+						print_icon "${icon}" ;
+						printf "%s" "${SP}${FC2}${label}${FC}" ;
+					end_click "5" ;
+				end_click "4" ;
+			end_click "3" ;
+		end_click "1" ;
+	end_status_module ;
 }
 
 sp_separator_status()
@@ -513,13 +704,26 @@ sp_separator_status()
 	echo "$SEPARATOR" ;
 }
 
+weather_notify()
+{
+	notify-send -i "weather-clouds" "Current weather" "$(weather-report -qm ${1})" ;
+}
+
 sp_weather_status()
 {
-	ICON="$FC2%{T2}$FC%{T1}" ;
+#	ICON="${SP}${i_fae_sun_cloud}${SP}" ;
+	ICON="" ;
+	LOCATION="uwww" ;
+	CMD_1="weather_notify ${LOCATION}" ;
+	
+	label="$(weather-report -qm --headers='Temperature' ${LOCATION} | sed 's/^.*: //;s/ C$/°C/')"
 
-	COMMAND_1='notify-send "$(weather-report -qm)"' ;
-
-	echo "%{A1:$COMMAND_1:}$ICON$(weather-report -qm --headers='Temperature' | cut -d ':' -f 2)%{A1}" ;
+	begin_status_module ;
+		begin_click "1" "${CMD_1}" ;
+			print_icon "${ICON}" ;
+			printf "%s" "${label}" ;
+		end_click "1" ;
+	end_status_module ;
 }
 _EOF_
 fi ;
