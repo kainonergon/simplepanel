@@ -432,6 +432,22 @@ check_flag ()	# 1 parameter: flag_name
 	[ -f "${TMP}${1}" ] ;
 }
 
+print_vbar()	# vertical bar, from 0 to 100; 1 parameter: vbar_level
+{
+	case "$(( ${1} / 11 ))" in
+		9|8)	label='█' ;;
+		7)		label='▇' ;;
+		6)		label='▆' ;;
+		5)		label='▅' ;;
+		4)		label='▄' ;;
+		3)		label='▃' ;;
+		2)		label='▂' ;;
+		1)		label='▁' ;;
+		*)		label=' ' ;;
+	esac ;
+	printf "%s" "${FC2}${label}${FC}" ;
+}
+
 # formatting modules
 
 sp_status_separator()
@@ -524,10 +540,10 @@ sp_status_volume()
 		exit ;
 	fi ;
 
-	ICON_0="%{O1}${i_oct_mute}" ;				# mute
-	ICON_1="%{O-2}${i_fa_volume_off}%{O8}" ;	# low
-	ICON_2="%{O-1}${i_fa_volume_down}%{O5}" ;	# medium
-	ICON_3="%{O2}${i_fa_volume_up}" ;			# high
+	ICON_0="%{O1}${i_oct_mute}${SP}" ;				# mute
+	ICON_1="%{O-2}${i_fa_volume_off}%{O8}${SP}" ;	# low
+	ICON_2="%{O-1}${i_fa_volume_down}%{O5}${SP}" ;	# medium
+	ICON_3="%{O2}${i_fa_volume_up}${SP}" ;			# high
 
 	CMD_1="volume_toggle $1" ;
 	CMD_3="terminal -e alsamixer" ;
@@ -535,16 +551,10 @@ sp_status_volume()
 	CMD_5="volume_down $1" ;
 
 	vol_level="$(volume_get_level)" ;
-	case $(( ${vol_level} / 11 )) in
-		9|8)	label='█'	; icon="$ICON_3" ;;
-		7)		label='▇'	; icon="$ICON_3" ;;
-		6)		label='▆'	; icon="$ICON_3" ;;
-		5)		label='▅'	; icon="$ICON_2" ;;
-		4)		label='▄'	; icon="$ICON_2" ;;
-		3)		label='▃'	; icon="$ICON_2" ;;
-		2)		label='▂'	; icon="$ICON_1" ;;
-		1)		label='▁'	; icon="$ICON_1" ;;
-		*)		label=' '	; icon="$ICON_1" ;;
+	case $(( ${vol_level} / 30 )) in
+		0)		icon="$ICON_1" ;;
+		1)		icon="$ICON_2" ;;
+		*)		icon="$ICON_3" ;;
 	esac ;
 	
 	# check if sound is mute
@@ -558,7 +568,7 @@ sp_status_volume()
 				begin_click "4" "${CMD_4}" ;
 					begin_click "5" "${CMD_5}" ;
 						print_icon "${icon}" ;
-						printf "%s" "${SP}${FC2}${label}${FC}" ;
+						print_vbar "${vol_level}" ;
 					end_click "5" ;
 				end_click "4" ;
 			end_click "3" ;
@@ -601,37 +611,26 @@ backlight_up()
 
 sp_status_backlight()
 {
-	ICON="${SP}${i_fa_sun_o}" ;
+	ICON="${SP}${i_fa_sun_o}${SP}" ;
 
 	CMD_4="backlight_up ${1}" ;
 	CMD_5="backlight_down ${1}" ;
 
 	if [ -z "$(ls /sys/class/backlight/)" ] ; then	# no backlight
-		label="no backlight" ;
+		echo "no backlight" ;
 	else
 		set -- /sys/class/backlight/* ;
 		bl_stat="$(( 100 * $(cat ${1}/actual_brightness) / $(cat ${1}/max_brightness) ))" ;
-		case "$(( ${bl_stat} / 11 ))" in
-			9|8)	label='█' ;;
-			7)		label='▇' ;;
-			6)		label='▆' ;;
-			5)		label='▅' ;;
-			4)		label='▄' ;;
-			3)		label='▃' ;;
-			2)		label='▂' ;;
-			1)		label='▁' ;;
-			*)		label=' ' ;;
-		esac ;
-	fi ;
 
-	begin_status_module ;
-		begin_click "4" "${CMD_4}" ;
-			begin_click "5" "${CMD_5}" ;
-				print_icon "${ICON}" ;
-				printf "%s" "${SP}${FC2}${label}${FC}"
-			end_click "5" ;
-		end_click "4" ;
-	end_status_module ;
+		begin_status_module ;
+			begin_click "4" "${CMD_4}" ;
+				begin_click "5" "${CMD_5}" ;
+					print_icon "${ICON}" ;
+					print_vbar "${bl_stat}" ;
+				end_click "5" ;
+			end_click "4" ;
+		end_status_module ;
+	fi ;
 }
 
 # battery module for status line
