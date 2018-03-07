@@ -51,11 +51,30 @@ SP_OFFSET_2=-1
 SP_FONT_3="font\-logos:pixelsize=22"			# extra font
 SP_OFFSET_3=1
 
-# Load Nerd Font icon names. See https://github.com/ryanoasis/nerd-fonts/tree/master/bin/scripts/lib
+# Nerd Font icon names. See https://github.com/ryanoasis/nerd-fonts/tree/master/bin/scripts/lib
 
-. ~/.bin/i_fa.sh		# Icon names for font awesome
-. ~/.bin/i_fae.sh		# Icon names for font awesome extension
-#. ~/.bin/i_linux.sh	# Icon names for linux logos
+i='' i_fa_bars=$i ;
+i='' i_fa_window_maximize=$i ;
+i='' i_fa_window_minimize=$i ;
+i='' i_fa_window_restore=$i ;
+i='' i_fa_close=$i ;
+i='' i_fa_keyboard_o=$i ;
+i='' i_fa_wifi=$i ;
+i='' i_fa_battery_4=$i ;
+i='' i_fa_battery_3=$i ;
+i='' i_fa_battery_2=$i ;
+i='' i_fa_battery_1=$i ;
+i='' i_fa_battery_0=$i ;
+i='' i_fa_plug=$i ;
+i='' i_fa_sun_o=$i ;
+i='' i_fa_clock_o=$i ;
+i='' i_fa_calendar_o=$i ;
+i='' i_fa_calendar=$i ;
+i='' i_fa_volume_off=$i ;
+i='' i_fa_volume_down=$i ;
+i='' i_fa_volume_up=$i ;
+i='' i_oct_mute=$i ;
+i='' i_fae_sun_cloud=$i ;
 
 # Set colors and lemonbar format codes. See more at https://github.com/LemonBoy/bar
 # Adapta dark
@@ -289,7 +308,8 @@ sp_xkb()
 		exit ;
 	fi ;
 
-	ICON="" ; # "${SP}${i_fa_keyboard_o}" ;
+	ICON="" ;
+	# ICON="${SP}${i_fa_keyboard_o}" ;
 	COMMAND_1="xkb-switch -n" ;
 
 	while true; do
@@ -657,7 +677,7 @@ sp_volume_status()
 		exit ;
 	fi ;
 
-	ICON_0="%{O1}" ;							# mute
+	ICON_0="%{O1}${i_oct_mute}" ;				# mute
 	ICON_1="%{O-2}${i_fa_volume_off}%{O8}" ;	# low
 	ICON_2="%{O-1}${i_fa_volume_down}%{O5}" ;	# medium
 	ICON_3="%{O2}${i_fa_volume_up}" ;			# high
