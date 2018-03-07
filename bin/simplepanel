@@ -816,6 +816,7 @@ IFS='
 			shift ;
 		done ;
 		echo "$panel_line" ;	# print the panel line to update lemonbar
+		sleep 0.01 ;
 	done ;
 } | lemonbar \
 	-a 30 \
