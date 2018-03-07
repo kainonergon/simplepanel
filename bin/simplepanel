@@ -696,7 +696,7 @@ sp_status_weather()
 {
 #	ICON="${SP}${i_fae_sun_cloud}${SP}" ;
 	ICON="" ;
-	LOCATION="uwww" ;
+	LOCATION="mmmm" ;	# ICAO airport code see https://en.wikipedia.org/wiki/List_of_airports_by_IATA_and_ICAO_code
 	CMD_1="weather_notify ${LOCATION}" ;
 	
 	label="$(weather-report -qm --headers='Temperature' ${LOCATION} | sed 's/^.*: //;s/ C$/°C/')"
