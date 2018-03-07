@@ -386,17 +386,17 @@ sp_status()
 # Set status line structure
 
 sp_status_modules="
-sp_wifi_status
-sp_separator_status
-sp_volume_status
-sp_separator_status
-sp_backlight_status
-sp_separator_status
-sp_battery_status
-sp_separator_status
-sp_weather_status
-sp_separator_status
-sp_clock_status
+sp_status_wifi
+sp_status_separator
+sp_status_volume
+sp_status_separator
+sp_status_backlight
+sp_status_separator
+sp_status_battery
+sp_status_separator
+sp_status_weather
+sp_status_separator
+sp_status_clock
 "
 #sp_separator_status
 #sp_weather_status
@@ -432,6 +432,13 @@ check_flag ()	# 1 parameter: flag_name
 	[ -f "${TMP}${1}" ] ;
 }
 
+# formatting modules
+
+sp_status_separator()
+{
+	echo "$SEPARATOR" ;
+}
+
 # wifi module for status line
 
 show_wifi_toggle()
@@ -440,7 +447,7 @@ show_wifi_toggle()
 	update_now "${1}" ;
 }
 
-sp_wifi_status()
+sp_status_wifi()
 {
 	# ICON="${SP}${i_fa_wifi}${SP}" ;
 	ICON="" ;
@@ -480,9 +487,156 @@ sp_wifi_status()
 	end_status_module ;
 }
 
+# sound volume module for status line
+
+volume_get_level()
+{
+	amixer get Master | sed -n 's/^.*\[\([0-9]\+\)%.*$/\1/p' | head -n 1 ;
+}
+
+volume_get_state()
+{
+	amixer get Master | sed -n 's/^.*\[\(o[nf]\+\).*$/\1/p' | head -n 1 ;
+}
+
+volume_toggle()
+{
+	amixer set Master toggle ;
+	update_now "${1}" ;
+}
+
+volume_up()
+{
+	amixer set Master 5%+ ;
+	update_now "${1}" ;
+}
+
+volume_down()
+{
+	amixer set Master 5%- ;
+	update_now "${1}" ;
+}
+
+sp_status_volume()
+{
+	if ! which amixer > /dev/null ; then		# chech if amixer is installed
+		echo "no amixer" ;
+		exit ;
+	fi ;
+
+	ICON_0="%{O1}${i_oct_mute}" ;				# mute
+	ICON_1="%{O-2}${i_fa_volume_off}%{O8}" ;	# low
+	ICON_2="%{O-1}${i_fa_volume_down}%{O5}" ;	# medium
+	ICON_3="%{O2}${i_fa_volume_up}" ;			# high
+
+	CMD_1="volume_toggle $1" ;
+	CMD_3="terminal -e alsamixer" ;
+	CMD_4="volume_up $1" ;
+	CMD_5="volume_down $1" ;
+
+	vol_level="$(volume_get_level)" ;
+	case $(( ${vol_level} / 11 )) in
+		9|8)	label='█'	; icon="$ICON_3" ;;
+		7)		label='▇'	; icon="$ICON_3" ;;
+		6)		label='▆'	; icon="$ICON_3" ;;
+		5)		label='▅'	; icon="$ICON_2" ;;
+		4)		label='▄'	; icon="$ICON_2" ;;
+		3)		label='▃'	; icon="$ICON_2" ;;
+		2)		label='▂'	; icon="$ICON_1" ;;
+		1)		label='▁'	; icon="$ICON_1" ;;
+		*)		label=' '	; icon="$ICON_1" ;;
+	esac ;
+	
+	# check if sound is mute
+	if [ "$(volume_get_state)" = "off" ] ; then
+		icon="$ICON_0" ;
+	fi ;
+
+	begin_status_module ;
+		begin_click "1" "${CMD_1}" ;
+			begin_click "3" "${CMD_3}" ;
+				begin_click "4" "${CMD_4}" ;
+					begin_click "5" "${CMD_5}" ;
+						print_icon "${icon}" ;
+						printf "%s" "${SP}${FC2}${label}${FC}" ;
+					end_click "5" ;
+				end_click "4" ;
+			end_click "3" ;
+		end_click "1" ;
+	end_status_module ;
+}
+
+# backlight module for status line
+
+backlight_down()
+{
+	index="${1}" ;
+	if ! [ -z "$(ls /sys/class/backlight/)" ] ; then
+		set -- /sys/class/backlight/* ;
+		bl_stat="$(( 100 * $(cat ${1}/actual_brightness) / $(cat ${1}/max_brightness) ))" ;
+		if [ "${bl_stat}" -gt 10 ] ; then		# make sure backlight is not too low
+			if which light > /dev/null ; then		# check if light is installed
+				light -U 2 ;
+			elif which xbacklight > /dev/null ; then	# check if xbacklight is installed
+				xbacklight -time 20 -steps 2 -2 ;
+			else
+				exit ;
+			fi ;
+			update_now "${index}" ;
+		fi ;
+	fi ;
+}
+
+backlight_up()
+{
+	if which light > /dev/null ; then		# check if light is installed
+		light -A 2 ;
+	elif which xbacklight > /dev/null ; then	# check if xbacklight is installed
+		xbacklight -time 20 -steps 2 +2 ;
+	else
+		exit ;
+	fi ;
+	update_now "${1}" ;
+}
+
+sp_status_backlight()
+{
+	ICON="${SP}${i_fa_sun_o}" ;
+
+	CMD_4="backlight_up ${1}" ;
+	CMD_5="backlight_down ${1}" ;
+
+	if [ -z "$(ls /sys/class/backlight/)" ] ; then	# no backlight
+		label="no backlight" ;
+	else
+		set -- /sys/class/backlight/* ;
+		bl_stat="$(( 100 * $(cat ${1}/actual_brightness) / $(cat ${1}/max_brightness) ))" ;
+		case "$(( ${bl_stat} / 11 ))" in
+			9|8)	label='█' ;;
+			7)		label='▇' ;;
+			6)		label='▆' ;;
+			5)		label='▅' ;;
+			4)		label='▄' ;;
+			3)		label='▃' ;;
+			2)		label='▂' ;;
+			1)		label='▁' ;;
+			*)		label=' ' ;;
+		esac ;
+	fi ;
+
+	begin_status_module ;
+		begin_click "4" "${CMD_4}" ;
+			begin_click "5" "${CMD_5}" ;
+				print_icon "${ICON}" ;
+				printf "%s" "${SP}${FC2}${label}${FC}"
+			end_click "5" ;
+		end_click "4" ;
+	end_status_module ;
+}
+
 # battery module for status line
 
-sp_battery_status()
+sp_status_battery()
 {
 	ICON_0="${FC3}${SP}${i_fa_battery_0}" ;	# empty
 	ICON_1="${FC3}${SP}${i_fa_battery_1}" ;	# almost empty
@@ -532,75 +686,27 @@ sp_battery_status()
 	end_status_module ;
 }
 
-# backlight module for status line
+# weather module for status line
 
-backlight_down()
+weather_notify()
 {
-	if which light > /dev/null ; then		# check if light is installed
-		COMMAND="light -U 2" ;
-	elif which xbacklight > /dev/null ; then	# check if xbacklight is installed
-		COMMAND="xbacklight -time 20 -steps 2 -2" ;
-	else
-		exit ;
-	fi ;
-
-	index=${1} ;
-	if ! [ -z "$(ls /sys/class/backlight/)" ] ; then
-		set -- /sys/class/backlight/* ;
-		BL_STAT=$(( 100 * $(cat $1/actual_brightness) / $(cat $1/max_brightness) )) ;
-		if [ $BL_STAT -gt 12 ] ; then		# make sure backlight is not too low
-			$COMMAND ;
-			update_now "${index}" ;
-		fi ;
-	fi ;
+	notify-send -i "weather-clouds" "Current weather" "$(weather-report -qm ${1})" ;
 }
 
-backlight_up()
+sp_status_weather()
 {
-	if which light > /dev/null ; then		# check if light is installed
-		COMMAND="light -A 2" ;
-	elif which xbacklight > /dev/null ; then	# check if xbacklight is installed
-		COMMAND="xbacklight -time 20 -steps 2 +2" ;
-	else
-		exit ;
-	fi ;
-
-	$COMMAND ;
-	update_now "${1}" ;
-}
-
-sp_backlight_status()
-{
-	ICON="${SP}${i_fa_sun_o}" ;
-
-	CMD_4="backlight_up $1" ;
-	CMD_5="backlight_down $1" ;
-
-	if [ -z "$(ls /sys/class/backlight/)" ] ; then	# no backlight
-		label="no backlight" ;
-	else
-		set -- /sys/class/backlight/* ;
-		bl_stat="$(( 100 * $(cat ${1}/actual_brightness) / $(cat ${1}/max_brightness) ))" ;
-		case $(( $bl_stat / 11 )) in
-			9|8)	label='█' ;;
-			7)		label='▇' ;;
-			6)		label='▆' ;;
-			5)		label='▅' ;;
-			4)		label='▄' ;;
-			3)		label='▃' ;;
-			2)		label='▂' ;;
-			1)		label='▁' ;;
-			*)		label=' ' ;;
-		esac ;
-	fi ;
+#	ICON="${SP}${i_fae_sun_cloud}${SP}" ;
+	ICON="" ;
+	LOCATION="uwww" ;
+	CMD_1="weather_notify ${LOCATION}" ;
+	
+	label="$(weather-report -qm --headers='Temperature' ${LOCATION} | sed 's/^.*: //;s/ C$/°C/')"
 
 	begin_status_module ;
-		begin_click "4" "${CMD_4}" ;
-			begin_click "5" "${CMD_5}" ;
-				print_icon "${ICON}" ;
-				printf "%s" "${SP}${FC2}${label}${FC}"
-			end_click "5" ;
-		end_click "4" ;
+		begin_click "1" "${CMD_1}" ;
+			print_icon "${ICON}" ;
+			printf "%s" "${label}" ;
+		end_click "1" ;
 	end_status_module ;
 }
 
@@ -617,7 +723,7 @@ calendar_notify()
 	notify-send -i calendar "$(date)" "$(cal --color=always | sed 's/\x1b\[7m/<b><span background=\"#00BCD4\">/;s/\x1b\[27m/<\/span><\/b>/;s/\t//g')" ;
 }
 
-sp_clock_status()
+sp_status_clock()
 {
 	# ICON_TIME="${SP}${i_fa_clock_o}${SP}" ;
 	ICON_TIME="" ;
@@ -641,112 +747,6 @@ sp_clock_status()
 				print_icon "${ICON_TIME}" ;
 				printf "%s" "${current_time}" ;
 			end_click "3" ;
-		end_click "1" ;
-	end_status_module ;
-}
-
-# sound volume module for status line
-
-volume_get_level()
-{
-	amixer get Master | sed -n 's/^.*\[\([0-9]\+\)%.*$/\1/p' | head -n 1 ;
-}
-
-volume_get_state()
-{
-	amixer get Master | sed -n 's/^.*\[\(o[nf]\+\).*$/\1/p' | head -n 1 ;
-}
-
-volume_toggle()
-{
-	amixer set Master toggle ;
-	update_now "${1}" ;
-}
-
-volume_up()
-{
-	amixer set Master 5%+ ;
-	update_now "${1}" ;
-}
-
-volume_down()
-{
-	amixer set Master 5%- ;
-	update_now "${1}" ;
-}
-
-sp_volume_status()
-{
-	if ! which amixer > /dev/null ; then		# chech if amixer is installed
-		echo "no amixer" ;
-		exit ;
-	fi ;
-
-	ICON_0="%{O1}${i_oct_mute}" ;				# mute
-	ICON_1="%{O-2}${i_fa_volume_off}%{O8}" ;	# low
-	ICON_2="%{O-1}${i_fa_volume_down}%{O5}" ;	# medium
-	ICON_3="%{O2}${i_fa_volume_up}" ;			# high
-
-	CMD_1="volume_toggle $1" ;
-	CMD_3="terminal -e alsamixer" ;
-	CMD_4="volume_up $1" ;
-	CMD_5="volume_down $1" ;
-
-	vol_level="$(volume_get_level)" ;
-	case $(( ${vol_level} / 11 )) in
-		9|8)	label='█'	; icon="$ICON_3" ;;
-		7)		label='▇'	; icon="$ICON_3" ;;
-		6)		label='▆'	; icon="$ICON_3" ;;
-		5)		label='▅'	; icon="$ICON_2" ;;
-		4)		label='▄'	; icon="$ICON_2" ;;
-		3)		label='▃'	; icon="$ICON_2" ;;
-		2)		label='▂'	; icon="$ICON_1" ;;
-		1)		label='▁'	; icon="$ICON_1" ;;
-		*)		label=' '	; icon="$ICON_1" ;;
-	esac ;
-	
-	# check if sound is mute
-	if [ "$(volume_get_state)" = "off" ] ; then
-		icon="$ICON_0" ;
-	fi ;
-
-	begin_status_module ;
-		begin_click "1" "${CMD_1}" ;
-			begin_click "3" "${CMD_3}" ;
-				begin_click "4" "${CMD_4}" ;
-					begin_click "5" "${CMD_5}" ;
-						print_icon "${icon}" ;
-						printf "%s" "${SP}${FC2}${label}${FC}" ;
-					end_click "5" ;
-				end_click "4" ;
-			end_click "3" ;
-		end_click "1" ;
-	end_status_module ;
-}
-
-sp_separator_status()
-{
-	echo "$SEPARATOR" ;
-}
-
-weather_notify()
-{
-	notify-send -i "weather-clouds" "Current weather" "$(weather-report -qm ${1})" ;
-}
-
-sp_weather_status()
-{
-#	ICON="${SP}${i_fae_sun_cloud}${SP}" ;
-	ICON="" ;
-	LOCATION="uwww" ;
-	CMD_1="weather_notify ${LOCATION}" ;
-	
-	label="$(weather-report -qm --headers='Temperature' ${LOCATION} | sed 's/^.*: //;s/ C$/°C/')"
-
-	begin_status_module ;
-		begin_click "1" "${CMD_1}" ;
-			print_icon "${ICON}" ;
-			printf "%s" "${label}" ;
 		end_click "1" ;
 	end_status_module ;
 }
