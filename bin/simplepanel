@@ -597,7 +597,7 @@ sp_clock_status()
 	# ICON_TIME="${SP}${i_fa_clock_o}${SP}" ;
 	ICON_TIME="" ;
 	# ICON_DATE="${SP}${i_fa_calendar_o}${SP}" ;
-	ICON_DATE= "" ;
+	ICON_DATE="" ;
 
 	CMD_1="show_date_toggle ${1}" ;
 	CMD_3="calendar_popup" ;
