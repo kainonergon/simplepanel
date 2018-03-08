@@ -42,18 +42,19 @@ TMP="/tmp/simplepanel"
 
 # Set fonts
 
-SP_FONT_1="-xos4-terminus-medium-r-normal--18-*-*-*-*-*-iso10646-1"		# main font
+SP_FONT_1="-xos4-terminus-medium-r-normal--18-*-*-*-*-*-iso10646-1"	# main font
 SP_OFFSET_1=-2
 SP_FONT_2="TerminessTTF Nerd Font:pixelsize=16"		# iconic font
 SP_OFFSET_2=-2
+SP_FONT_3="monospace:pixelsize=16"			# extra font
+SP_OFFSET_3=0
 
 # SP_FONT_1="Knack Nerd Font:pixelsize=16"		# main font
 # SP_OFFSET_1=-1
 # SP_FONT_2="Knack Nerd Font:pixelsize=16"		# iconic font
 # SP_OFFSET_2=-1
-
-SP_FONT_3="font\-logos:pixelsize=22"			# extra font
-SP_OFFSET_3=1
+# SP_FONT_3="font\-logos:pixelsize=22"			# extra font
+# SP_OFFSET_3=1
 
 # Nerd Font icon names. See https://github.com/ryanoasis/nerd-fonts/tree/master/bin/scripts/lib
 
@@ -83,22 +84,22 @@ i='' i_fae_sun_cloud=$i ;
 # Set colors and lemonbar format codes. See more at https://github.com/LemonBoy/bar
 # Adapta dark
 
-SP_BG_COLOR='#FF222D32'		# default background color
+SP_BG_COLOR='#FF222D32'			# default background color
 
-BC='%{B-}'					# use default background color
+BC='%{B-}'				# use default background color
 BC1='%{B#FF00BCD4}'			# use alternative background color / highlight
 
-SP_FG_COLOR='#FFEFEFEF'		# default foreground color
+SP_FG_COLOR='#FFEFEFEF'			# default foreground color
 
-FC='%{F-}'					# use default foreground color	- text
-FC1='%{F#FF3A464B}'			# use foreground color 1		- separator
-FC2='%{F#FFCFD8DC}'			# use foreground color 2		- icons
-FC3='%{Fred}'				# use foreground color 3		- urgent
+FC='%{F-}'				# use default foreground color	- text
+FC1='%{F#FF3A464B}'			# use foreground color 1	- separator
+FC2='%{F#FFCFD8DC}'			# use foreground color 2	- icons
+FC3='%{Fred}'				# use foreground color 3	- urgent
 
 ICO="${FC2}%{T2}"			# use icon color and font
 TXT='%{F-}%{T1}'			# use text color and font
 
-SP="%{O4}"					# small space
+SP="%{O4}"				# small space
 
 SEPARATOR="${SP}${FC1}%{R}%{O1}%{R}${FC}${SP}"
 
@@ -136,12 +137,12 @@ sp_padding
 
 # general purpose functions to use in modules
 
-begin_module ()		# start module; 1 parameter module_index
+begin_module()	# start module; 1 parameter module_index
 {
 	printf "%s" "${1}:" ;
 }
 
-end_module ()		# finish module
+end_module()	# finish module
 {
 	printf "\n" ;
 }
@@ -151,7 +152,7 @@ begin_click()	# must be nested with end_click; 2 parameters: mouse_button_number
 	printf "%s" "%{A${1}:${2}:}" ;
 }
 
-end_click()		# must be nested with begin_click; 1 parameter: mouse_button_number
+end_click()	# must be nested with begin_click; 1 parameter: mouse_button_number
 {
 	printf "%s" "%{A${1}}" ;
 }
@@ -197,34 +198,34 @@ button()	# generic button module; 4 parameters: module_index mouse_button_number
 sp_menu()
 {
 	button	"$1" \
-			"1" \
-			"rofi -show drun -location 1 -lines 28 -width 25" \
-			" ${i_fa_bars}${SP}" ;
-			# "${SP}%{F#FF35BF5C}%{T3}" ;
+		"1" \
+		"rofi -show drun -location 1 -lines 28 -width 25" \
+		" ${i_fa_bars}${SP}" ;
+		# "${SP}%{F#FF35BF5C}%{T3}" ;
 }
 
 sp_button_minimize()
 {
 	button	"$1" \
-			"1" \
-			"whid hide" \
-			"${SP}${i_fa_window_minimize}" ;
+		"1" \
+		"whid hide" \
+		"${SP}${i_fa_window_minimize}" ;
 }
 
 sp_button_maximize()
 {
 	button	"$1" \
-			"1" \
-			"bspc desktop -l next" \
-			"${SP}${i_fa_window_maximize}" ;
+		"1" \
+		"bspc desktop -l next" \
+		"${SP}${i_fa_window_maximize}" ;
 }
 
 sp_button_close()
 {
 	button	"$1" \
-			"1" \
-			"bspc node -c" \
-			"${SP}${i_fa_close}" ;
+		"1" \
+		"bspc node -c" \
+		"${SP}${i_fa_close}" ;
 }
 
 # bspwm module
@@ -252,9 +253,9 @@ sp_bspwm()
 
 	CMD_NEXT="bspc desktop -f next.occupied" ;	# focus next occupied desktop
 	CMD_PREV="bspc desktop -f prev.occupied" ;	# focus previous occupied desktop
-	CMD_LAST="bspc desktop -f last" ;			# focus last focused desktop
-	CMD_FOCUS="bspc desktop -f " ;				# focus desktop
-	CMD_LAYOUT="bspc desktop -l next" ;			# switch to the next layout (tiling or monocle)
+	CMD_LAST="bspc desktop -f last" ;		# focus last focused desktop
+	CMD_FOCUS="bspc desktop -f " ;			# focus desktop
+	CMD_LAYOUT="bspc desktop -l next" ;		# switch to the next layout (tiling or monocle)
 
 	ICON_TIL=" ${i_fa_window_restore}" ;
 	ICON_MON=" ${i_fa_window_maximize}%{O1}" ;
@@ -436,14 +437,14 @@ print_vbar()	# vertical bar, from 0 to 100; 1 parameter: vbar_level
 {
 	case "$(( ${1} / 11 ))" in
 		9|8)	label='█' ;;
-		7)		label='▇' ;;
-		6)		label='▆' ;;
-		5)		label='▅' ;;
-		4)		label='▄' ;;
-		3)		label='▃' ;;
-		2)		label='▂' ;;
-		1)		label='▁' ;;
-		*)		label=' ' ;;
+		7)	label='▇' ;;
+		6)	label='▆' ;;
+		5)	label='▅' ;;
+		4)	label='▄' ;;
+		3)	label='▃' ;;
+		2)	label='▂' ;;
+		1)	label='▁' ;;
+		*)	label=' ' ;;
 	esac ;
 	printf "%s" "${FC2}${label}${FC}" ;
 }
@@ -477,11 +478,11 @@ sp_status_wifi()
 	if [ -d /sys/class/net/${wifi_int}/wireless ] && [ "$(cat /sys/class/net/${wifi_int}/operstate)" != 'down' ] ; then
 		wifi_quality=$(awk 'NR==3 {print int($3 * 100 / 70)}' /proc/net/wireless) ;
 		case $(( ${wifi_quality} / 20 )) in
-			5|4)	label="${FC2}▂▄▆█${FC}" ;;
-			3)		label="${FC2}▂▄▆_${FC}" ;;
-			2)		label="${FC2}▂▄__${FC}" ;;
-			1)		label="${FC3}▂___${FC}" ;;
-			*)		label="${FC3}____${FC}" ;;
+			5|4) label="${FC2}▂▄▆█${FC}" ;;
+			3)   label="${FC2}▂▄▆_${FC}" ;;
+			2)   label="${FC2}▂▄__${FC}" ;;
+			1)   label="${FC3}▂___${FC}" ;;
+			*)   label="${FC3}____${FC}" ;;
 		esac ;
 
 		# check if wifi name should be shown
@@ -540,10 +541,10 @@ sp_status_volume()
 		exit ;
 	fi ;
 
-	ICON_0="%{O1}${i_oct_mute}${SP}" ;				# mute
+	ICON_0="%{O1}${i_oct_mute}${SP}" ;		# mute
 	ICON_1="%{O-2}${i_fa_volume_off}%{O8}${SP}" ;	# low
 	ICON_2="%{O-1}${i_fa_volume_down}%{O5}${SP}" ;	# medium
-	ICON_3="%{O2}${i_fa_volume_up}${SP}" ;			# high
+	ICON_3="%{O2}${i_fa_volume_up}${SP}" ;		# high
 
 	CMD_1="volume_toggle $1" ;
 	CMD_3="terminal -e alsamixer" ;
@@ -552,9 +553,9 @@ sp_status_volume()
 
 	vol_level="$(volume_get_level)" ;
 	case $(( ${vol_level} / 30 )) in
-		0)		icon="$ICON_1" ;;
-		1)		icon="$ICON_2" ;;
-		*)		icon="$ICON_3" ;;
+		0) icon="$ICON_1" ;;
+		1) icon="$ICON_2" ;;
+		*) icon="$ICON_3" ;;
 	esac ;
 	
 	# check if sound is mute
@@ -584,7 +585,7 @@ backlight_down()
 	if ! [ -z "$(ls /sys/class/backlight/)" ] ; then
 		set -- /sys/class/backlight/* ;
 		bl_stat="$(( 100 * $(cat ${1}/actual_brightness) / $(cat ${1}/max_brightness) ))" ;
-		if [ "${bl_stat}" -gt 10 ] ; then		# make sure backlight is not too low
+		if [ "${bl_stat}" -gt 10 ] ; then			# make sure backlight is not too low
 			if which light > /dev/null ; then		# check if light is installed
 				light -U 2 ;
 			elif which xbacklight > /dev/null ; then	# check if xbacklight is installed
@@ -639,10 +640,10 @@ sp_status_battery()
 {
 	ICON_0="${FC3}${SP}${i_fa_battery_0}" ;	# empty
 	ICON_1="${FC3}${SP}${i_fa_battery_1}" ;	# almost empty
-	ICON_2="${SP}${i_fa_battery_2}" ;		# half
-	ICON_3="${SP}${i_fa_battery_3}" ;		# almost full
-	ICON_4="${SP}${i_fa_battery_4}" ;		# full
-	ICON_C="${SP}${i_fa_plug}%{O2}" ;		# charging
+	ICON_2="${SP}${i_fa_battery_2}" ;	# half
+	ICON_3="${SP}${i_fa_battery_3}" ;	# almost full
+	ICON_4="${SP}${i_fa_battery_4}" ;	# full
+	ICON_C="${SP}${i_fa_plug}%{O2}" ;	# charging
 
 	CMD_3="xfce4-power-manager -c" ;
 	CMD_4="backlight_up" ;
@@ -660,11 +661,11 @@ sp_status_battery()
 		label="${SP}${bat_cap}%" ;
 	else
 		case $(( ${bat_cap} / 21 )) in
-			0)	icon="${ICON_0}" ;;
-			1)	icon="${ICON_1}" ;;
-			2)	icon="${ICON_2}" ;;
-			3)	icon="${ICON_3}" ;;
-			4)	icon="${ICON_4}" ;;
+			0) icon="${ICON_0}" ;;
+			1) icon="${ICON_1}" ;;
+			2) icon="${ICON_2}" ;;
+			3) icon="${ICON_3}" ;;
+			4) icon="${ICON_4}" ;;
 		esac ;
 		if [ "$bat_cap" -lt 97 ] ; then
 			label="${SP}${bat_cap}%" ;
