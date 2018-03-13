@@ -48,7 +48,7 @@ SP_FONT_1="-xos4-terminus-medium-r-normal--18-*-*-*-*-*-iso10646-1"	# main font
 SP_OFFSET_1=-2
 SP_FONT_2="TerminessTTF Nerd Font:pixelsize=16"		# iconic font
 SP_OFFSET_2=-2
-SP_FONT_3="monospace:pixelsize=16"			# extra font
+SP_FONT_3="monospace:pixelsize=18"					# extra font
 SP_OFFSET_3=0
 
 # SP_FONT_1="Knack Nerd Font:pixelsize=16"		# main font
@@ -60,48 +60,48 @@ SP_OFFSET_3=0
 
 # Nerd Font icon names. See https://github.com/ryanoasis/nerd-fonts/tree/master/bin/scripts/lib
 
-i='' i_fa_bars=$i ;
-i='' i_fa_window_maximize=$i ;
-i='' i_fa_window_minimize=$i ;
-i='' i_fa_window_restore=$i ;
-i='' i_fa_close=$i ;
-i='' i_fa_keyboard_o=$i ;
-i='' i_fa_wifi=$i ;
-i='' i_fa_battery_4=$i ;
-i='' i_fa_battery_3=$i ;
-i='' i_fa_battery_2=$i ;
-i='' i_fa_battery_1=$i ;
-i='' i_fa_battery_0=$i ;
-i='' i_fa_plug=$i ;
-i='' i_fa_sun_o=$i ;
-i='' i_fa_clock_o=$i ;
-i='' i_fa_calendar_o=$i ;
-i='' i_fa_calendar=$i ;
-i='' i_fa_volume_off=$i ;
-i='' i_fa_volume_down=$i ;
-i='' i_fa_volume_up=$i ;
-i='' i_oct_mute=$i ;
-i='' i_fae_sun_cloud=$i ;
+i='' i_fa_bars=$i
+i='' i_fa_window_maximize=$i
+i='' i_fa_window_minimize=$i
+i='' i_fa_window_restore=$i
+i='' i_fa_close=$i
+i='' i_fa_keyboard_o=$i
+i='' i_fa_wifi=$i
+i='' i_fa_battery_4=$i
+i='' i_fa_battery_3=$i
+i='' i_fa_battery_2=$i
+i='' i_fa_battery_1=$i
+i='' i_fa_battery_0=$i
+i='' i_fa_plug=$i
+i='' i_fa_sun_o=$i
+i='' i_fa_clock_o=$i
+i='' i_fa_calendar_o=$i
+i='' i_fa_calendar=$i
+i='' i_fa_volume_off=$i
+i='' i_fa_volume_down=$i
+i='' i_fa_volume_up=$i
+i='' i_oct_mute=$i
+i='' i_fae_sun_cloud=$i
 
 # Set colors and lemonbar format codes. See more at https://github.com/LemonBoy/bar
 # Adapta dark
 
-SP_BG_COLOR='#FF222D32'			# default background color
+SP_BG_COLOR='#FF222D32'		# default background color
 
-BC='%{B-}'				# use default background color
+BC='%{B-}'					# use default background color
 BC1='%{B#FF00BCD4}'			# use alternative background color / highlight
 
-SP_FG_COLOR='#FFEFEFEF'			# default foreground color
+SP_FG_COLOR='#FFEFEFEF'		# default foreground color
 
-FC='%{F-}'				# use default foreground color	- text
-FC1='%{F#FF3A464B}'			# use foreground color 1	- separator
-FC2='%{F#FFCFD8DC}'			# use foreground color 2	- icons
-FC3='%{Fred}'				# use foreground color 3	- urgent
+FC='%{F-}'					# use default foreground color	- text
+FC1='%{F#FF3A464B}'			# use foreground color 1		- separator
+FC2='%{F#FFCFD8DC}'			# use foreground color 2		- icons
+FC3='%{Fred}'				# use foreground color 3		- urgent
 
 ICO="${FC2}%{T2}"			# use icon color and font
 TXT='%{F-}%{T1}'			# use text color and font
 
-SP="%{O4}"				# small space
+SP="%{O4}"					# small space
 
 SEPARATOR="${SP}${FC1}%{R}%{O1}%{R}${FC}${SP}"
 
@@ -115,6 +115,7 @@ sp_modules="
 sp_menu
 sp_separator
 sp_bspwm
+sp_center
 sp_title
 sp_right
 sp_button_close
@@ -126,8 +127,7 @@ sp_padding
 "
 #sp_button_minimize
 #sp_button_maximize
-#sp_center
-#sp_separator
+
 
 # Module definitions
 # Every module gets its index as a positional parameter
@@ -139,248 +139,289 @@ sp_padding
 
 # general purpose functions to use in modules
 
-begin_module()	# start module; 1 parameter module_index
+begin_module()		# start module; 1 parameter module_index
 {
-	printf "%s" "${1}:" ;
+	printf "%s" "$1:"
 }
 
-end_module()	# finish module
+end_module()		# finish module
 {
-	printf "\n" ;
+	printf "\n"
 }
 
 begin_click()	# must be nested with end_click; 2 parameters: mouse_button_number command
 {
-	printf "%s" "%{A${1}:${2}:}" ;
+	printf "%s" "%{A${1}:${2}:}"
 }
 
-end_click()	# must be nested with begin_click; 1 parameter: mouse_button_number
+end_click()		# must be nested with begin_click; 1 parameter: mouse_button_number
 {
-	printf "%s" "%{A${1}}" ;
+	printf "%s" "%{A${1}}"
 }
 
 print_icon()	# use icon color and font; 1 parameter: icon
 {
-	printf "%s" "${ICO}${1}${TXT}" ;
+	printf "%s" "${ICO}${1}${TXT}"
 }
 
 # formatting modules
 
 sp_padding()
 {
-	echo "$1:$SP" ;
+	echo "$1:$SP"
 }
 
 sp_separator()
 {
-	echo "$1:$SEPARATOR" ;
+	echo "$1:$SEPARATOR"
 }
 
 sp_center()
 {
-	echo "$1:%{c}" ;
+	echo "$1:%{c}"
 }
 
 sp_right()
 {
-	echo "$1:%{r}" ;
+	echo "$1:%{r}"
 }
 
 # button modules
 
 button()	# generic button module; 4 parameters: module_index mouse_button_number command icon
 {
-	begin_module "${1}" ; 
-		begin_click "${2}" "${3}" ;
-			print_icon "${4}" ;
-		end_click "${2}" ;
-	end_module ;
+	begin_module "$1"
+		begin_click "$2" "$3"
+			print_icon "$4"
+		end_click "$2"
+	end_module
+}
+
+menu_cmd()
+{
+	rofi -show drun -location 1 -lines 28 -width 25
 }
 
 sp_menu()
 {
 	button	"$1" \
-		"1" \
-		"rofi -show drun -location 1 -lines 28 -width 25" \
-		" ${i_fa_bars}${SP}" ;
-		# "${SP}%{F#FF35BF5C}%{T3}" ;
+			"1" \
+			"menu_cmd" \
+			"${SP}%{F#FF35BF5C}%{T3}"
+			# " ${i_fa_bars}${SP}"
 }
 
 sp_button_minimize()
 {
 	button	"$1" \
-		"1" \
-		"whid hide" \
-		"${SP}${i_fa_window_minimize}" ;
+			"1" \
+			"whid hide" \
+			"${SP}${i_fa_window_minimize}"
 }
 
 sp_button_maximize()
 {
 	button	"$1" \
-		"1" \
-		"bspc desktop -l next" \
-		"${SP}${i_fa_window_maximize}" ;
+			"1" \
+			"bspc desktop -l next" \
+			"${SP}${i_fa_window_maximize}"
+}
+
+bspc_close()
+{
+	bspc node -c
 }
 
 sp_button_close()
 {
 	button	"$1" \
-		"1" \
-		"bspc node -c" \
-		"${SP}${i_fa_close}" ;
+			"1" \
+			"bspc_close" \
+			"${SP}${i_fa_close}"
 }
 
 # bspwm module
 
+bspc_next()	# focus next occupied desktop
+{
+	bspc desktop -f next.occupied
+}
+
+bspc_prev()	# focus previous occupied desktop
+{
+	bspc desktop -f prev.occupied
+}
+
+bspc_last()	# focus last focused desktop
+{
+	bspc desktop -f last
+}
+
+bspc_focus()	# focus desktop; 1 parameter: desktop
+{
+	bspc desktop -f "$1"
+}
+
+bspc_layout()	# switch to the next layout (tiling or monocle)
+{
+	bspc desktop -l next
+}
+
 sp_bspwm()
 {
 	if ! which bspc > /dev/null ; then	# check if bspwm is installed
-		begin_module "${1}" ;
-			printf "%s" "no bspwm" ;
-		end_module ;
-		exit ;
-	fi ;
+		begin_module "$1"
+			printf "%s" "no bspwm"
+		end_module
+		exit
+	fi
 
-	i=10 ;
+	i=10
 	while ! bspc wm -g > /dev/null && [ $i -gt 0 ] ; do	# wait while bspwm starts
-		sleep 0.5 ;
-		i=$(( $i - 1 )) ;
-	done ;
+		sleep 0.5
+		i=$(( $i - 1 ))
+	done
 	if [ $i -eq 0 ] ; then
-		begin_module "${1}" ;
-			printf "%s" "no bspwm" ;
-		end_module ;
-		exit ;					# exit if bspwm does not respond
-	fi ;
+		begin_module "$1"
+			printf "%s" "no bspwm"
+		end_module
+		exit					# exit if bspwm does not respond
+	fi
 
-	CMD_NEXT="bspc desktop -f next.occupied" ;	# focus next occupied desktop
-	CMD_PREV="bspc desktop -f prev.occupied" ;	# focus previous occupied desktop
-	CMD_LAST="bspc desktop -f last" ;		# focus last focused desktop
-	CMD_FOCUS="bspc desktop -f " ;			# focus desktop
-	CMD_LAYOUT="bspc desktop -l next" ;		# switch to the next layout (tiling or monocle)
+	ICON_TIL=" ${i_fa_window_restore}"
+	ICON_MON=" ${i_fa_window_maximize}%{O1}"
 
-	ICON_TIL=" ${i_fa_window_restore}" ;
-	ICON_MON=" ${i_fa_window_maximize}%{O1}" ;
-
-	module_index="$1"
+	module_index=$1
 
 	bspc subscribe \
 	| {
-		IFS=':' ;
+		IFS=':'
 		while read line ; do
-			bspwm_line="$module_index:%{A4:$CMD_NEXT:}%{A5:$CMD_PREV:}" ;
-				set -- $line ;
+			bspwm_line="${module_index}:%{A4:bspc_next:}%{A5:bspc_prev:}"
+				set -- $line
 				while [ $# -gt 0 ] ; do
-					desktop="${1#?}" ;
+					desktop="${1#?}"
 					case $1 in
 						O*|F*|U*)	# highlight focused desktop (occupied, free or urgent)
-							bspwm_line="${bspwm_line}%{A1:$CMD_LAST:}${BC1}${SP}${desktop}${SP}${BC}%{A1}" ;;
+							bspwm_line="${bspwm_line}%{A1:bspc_last:}${BC1}${SP}${desktop}${SP}${BC}%{A1}" ;;
 						o*|u*)		# show unfocused desktops (occupied or urgent)
-							bspwm_line="${bspwm_line}%{A1:$CMD_FOCUS$desktop:}${SP}${desktop}${SP}%{A1}" ;;
+							bspwm_line="${bspwm_line}%{A1:bspc_focus ${desktop}:}${SP}${desktop}${SP}%{A1}" ;;
 						L*)		# show current layout (tiling or monocle)
-							case $desktop in
+							case "${desktop}" in
 								T)	layout_ind="${ICO}${ICON_TIL}${TXT}" ;;
 								M)	layout_ind="${ICO}${ICON_MON}${TXT}" ;;
 								*)	layout_ind="${SP}${desktop}${SP}" ;;
-							esac ;
-							bspwm_line="${bspwm_line}%{A1:$CMD_LAYOUT:}${layout_ind}%{A1}" ;;
-					esac ;
-					shift ;
-				done ;
-			echo "$bspwm_line%{A5}%{A4}" ;
-		done ;
+							esac
+							bspwm_line="${bspwm_line}%{A1:bspc_layout:}${layout_ind}%{A1}" ;;
+					esac
+					shift
+				done
+			echo "${bspwm_line}%{A5}%{A4}"
+		done
 	}
+}
+
+# title module
+
+title_cmd()
+{
+	MonocleSwitcher
 }
 
 sp_title()
 {
 	if ! which xtitle > /dev/null ; then		# check if xtitle is installed
-		begin_module "${1}" ;
-			printf "%s" "no xtitle" ;
-		end_module ;
-		exit ;
-	fi ;
+		begin_module "$1"
+			printf "%s" "no xtitle"
+		end_module
+		exit
+	fi
 
-	COMMAND_1="MonocleSwitcher" ;
-	FORMAT="$1:%{A1:$COMMAND_1:} %s%{A1}\n" ;
+	FORMAT="${1}:%{A1:title_cmd:} %s%{A1}\n"
 
-	xtitle -s -t -70 -f "$FORMAT" ;
+	xtitle -s -t -70 -f "$FORMAT"
+}
+
+# keyboard layout indicator module
+
+xkb_next()
+{
+	xkb-switch -n	# switch to the next layout
 }
 
 sp_xkb()
 {
 	if ! which xkb-switch > /dev/null ; then	# check if xkb-switch is installed
-		begin_module "${1}" ;
-			printf "no xkb-switch" ;
-		end_module :
-		exit ;
-	fi ;
+		begin_module "$1"
+			printf "no xkb-switch"
+		end_module
+		exit
+	fi
 
-	ICON="" ;
-	# ICON="${SP}${i_fa_keyboard_o}" ;
-	COMMAND_1="xkb-switch -n" ;
+	ICON=""
+	# ICON="${SP}${i_fa_keyboard_o}"
 
 	while true; do
-		label="$(xkb-switch)"
-		begin_module "${1}" ;
-			begin_click "1" "${COMMAND_1}" ;
-				print_icon "${ICON}" ;
-				printf "%s" "${label}" ;
-			end_click "1" ;
-		end_module ;
-		xkb-switch -w ;
-	done ;
+		label="$(xkb-switch)"	# get layout name
+		begin_module "$1"
+			begin_click "1" "xkb_next"
+				print_icon "$ICON"
+				printf "%s" "$label"
+			end_click "1"
+		end_module
+		xkb-switch -w	# wait for layout change
+	done
 }
 
 # status line module
 
 sp_status()
 {
-	status_line_index=$1 ;
+	status_line_index="$1"
 	
 	IFS='
-' ;
+'
 
-	while true ; do						# start timed status line update
-		echo "all" > "${TMP}update_status_now" ;
-		sleep "$UPD_INT" ;
+	while true ; do							# start timed status line update
+		echo "all" > "${TMP}update_status_now"
+		sleep "$UPD_INT"
 	done &
 
 	while read index < "${TMP}update_status_now"; do
-		status_line="$status_line_index:" ;
-		if [ $index = "all" ] ; then			# update all status modules
-			sp_status_values="" ;
-			i=0 ;
+		status_line="$status_line_index:"
+		if [ $index = "all" ] ; then		# update all status modules
+			sp_status_values=""
+			i=0
 			for status_module in $sp_status_modules ; do
-				value="$($status_module $i)" ;
-				sp_status_values="$sp_status_values$value$IFS" ;	# store the value
-				status_line="$status_line$value" ;			# add the value to the status line
-				i=$(( $i+1 )) ;
-			done ;
-		else						# update one status module
-			set -- $sp_status_modules ;
-			shift $index ;
-			new_value="$($1 $index)" ;
-			set -- $sp_status_values ;
-			i=0 ;
-			sp_status_values="" ;
+				value="$($status_module $i)"
+				sp_status_values="${sp_status_values}${value}${IFS}"	# store the value
+				status_line="${status_line}${value}"					# add the value to the status line
+				i=$(( $i+1 ))
+			done
+		else								# update one status module
+			set -- $sp_status_modules
+			shift $index
+			new_value="$($1 $index)"
+			set -- $sp_status_values
+			i=0
+			sp_status_values=""
 			while [ $# -gt 0 ] ; do			# read the old values
 				if [ $i -eq $index ] ; then
-					value="$new_value" ;	# replace the value that updates
+					value="$new_value"		# replace the value that updates
 				else
-					value="$1" ;		# keep all other values
+					value="$1"				# keep all other values
 				fi
-				sp_status_values="$sp_status_values$value$IFS" ;	# store the value
-				status_line="$status_line$value" ;			# add the value to the status line
-				i=$(( $i+1 )) ;
-				shift ;		# remove old stored value
-			done ;
-		fi ;
-		echo "$status_line" ;
-	done ;
+				sp_status_values="${sp_status_values}${value}${IFS}"	# store the value
+				status_line="$status_line$value"						# add the value to the status line
+				i=$(( $i+1 ))
+				shift						# remove old stored value
+			done
+		fi
+		echo "$status_line"
+	done
 }
 
-# Modules with _status in the name do not loop
+# Modules for status line do not loop
 # They can be combined into one status line that updates every $UPD_INT seconds
 # First positional parameter is module index
 # Modules for status line do not print their module index
@@ -401,356 +442,345 @@ sp_status_weather
 sp_status_separator
 sp_status_clock
 "
-#sp_separator_status
-#sp_weather_status
 
 # general purpose functions to use in status line modules
 
-begin_status_module ()
+begin_status_module()
 {
 	true ;
 }
 
-end_status_module ()
+end_status_module()
 {
-	printf "\n" ;
+	printf "\n"
 }
 
-update_now ()	# 1 parameter: module_index
+update_now()	# 1 parameter: module_index
 {
-	echo "${1}" > "${TMP}update_status_now" ;
+	echo "${1}" > "${TMP}update_status_now"
 }
 
-toggle_flag ()	# 1 parameter: flag_name
+toggle_flag()	# 1 parameter: flag_name
 {
 	if [ -f "${TMP}${1}" ] ; then
-		rm "${TMP}${1}" ;
+		rm "${TMP}${1}"
 	else
-		touch "${TMP}${1}" ;
-	fi ;
+		touch "${TMP}${1}"
+	fi
 }
 
-check_flag ()	# 1 parameter: flag_name
+check_flag()	# 1 parameter: flag_name
 {
-	[ -f "${TMP}${1}" ] ;
+	[ -f "${TMP}${1}" ]
 }
 
 print_vbar()	# vertical bar, from 0 to 100; 1 parameter: vbar_level
 {
-	case "$(( ${1} / 11 ))" in
+	case "$(( $1 / 11 ))" in
 		9|8)	label='█' ;;
-		7)	label='▇' ;;
-		6)	label='▆' ;;
-		5)	label='▅' ;;
-		4)	label='▄' ;;
-		3)	label='▃' ;;
-		2)	label='▂' ;;
-		1)	label='▁' ;;
-		*)	label=' ' ;;
-	esac ;
-	printf "%s" "${FC2}${label}${FC}" ;
+		7)		label='▇' ;;
+		6)		label='▆' ;;
+		5)		label='▅' ;;
+		4)		label='▄' ;;
+		3)		label='▃' ;;
+		2)		label='▂' ;;
+		1)		label='▁' ;;
+		*)		label=' ' ;;
+	esac
+	printf "%s" "${FC2}${label}${FC}"
 }
 
-# formatting modules
+# formatting modules for status line
 
 sp_status_separator()
 {
-	echo "$SEPARATOR" ;
+	echo "$SEPARATOR"
 }
 
 # wifi module for status line
 
-show_wifi_toggle()
+show_wifi_toggle()	# 1 parameter: module index
 {
-	toggle_flag "show_wifi" ;
-	update_now "${1}" ;
+	toggle_flag "show_wifi"
+	update_now "$1"
+}
+
+wifi_menu()
+{
+	networkmanager_dmenu
 }
 
 sp_status_wifi()
 {
-	# ICON="${SP}${i_fa_wifi}${SP}" ;
-	ICON="" ;
-
-	CMD_1="show_wifi_toggle ${1}" ;
-	CMD_3="networkmanager_dmenu" ;
+	# ICON="${SP}${i_fa_wifi}${SP}"
+	ICON=""
 
 	# get wireless interface name
-	wifi_int="$(ip link show | awk '/state UP/ {print substr($2, 1, length($2)-1)}')" ;
+	wifi_int="$(ip link show | awk '/state UP/ {print substr($2, 1, length($2)-1)}')"
 
 	if [ -d /sys/class/net/${wifi_int}/wireless ] && [ "$(cat /sys/class/net/${wifi_int}/operstate)" != 'down' ] ; then
-		wifi_quality=$(awk 'NR==3 {print int($3 * 100 / 70)}' /proc/net/wireless) ;
-		case $(( ${wifi_quality} / 20 )) in
-			5|4) label="${FC2}▂▄▆█${FC}" ;;
-			3)   label="${FC2}▂▄▆_${FC}" ;;
-			2)   label="${FC2}▂▄__${FC}" ;;
-			1)   label="${FC3}▂___${FC}" ;;
-			*)   label="${FC3}____${FC}" ;;
-		esac ;
+		wifi_quality=$(awk 'NR==3 {print int($3 * 100 / 70)}' /proc/net/wireless)
+		case $(( $wifi_quality / 20 )) in
+			5|4)	label="${FC2}▂▄▆█${FC}" ;;
+			3)		label="${FC2}▂▄▆_${FC}" ;;
+			2)		label="${FC2}▂▄__${FC}" ;;
+			1)		label="${FC3}▂___${FC}" ;;
+			*)		label="${FC3}____${FC}" ;;
+		esac
 
 		# check if wifi name should be shown
 		if check_flag "show_wifi" && which iwgetid > /dev/null ; then
-			wifi_name="$(iwgetid -r)" ;
-			label="${label}${SP}${wifi_name}" ;
-		fi ;
+			wifi_name="$(iwgetid -r)"
+			label="${label}${SP}${wifi_name}"
+		fi
 	else
-		label="no wifi" ;
-	fi ;
+		label="no wifi"
+	fi
 	
-	begin_status_module ;
-		begin_click "1" "${CMD_1}" ;
-			begin_click "3" "${CMD_3}" ;
-				print_icon "${ICON}" ;
-				printf "%s" "${label}" ;
-			end_click "3" ;
-		end_click "1" ;
-	end_status_module ;
+	begin_status_module
+		begin_click "1" "show_wifi_toggle $1"
+			begin_click "3" "wifi_menu"
+				print_icon "$ICON"
+				printf "%s" "$label"
+			end_click "3"
+		end_click "1"
+	end_status_module
 }
 
 # sound volume module for status line
 
 volume_get_level()
 {
-	amixer get Master | sed -n 's/^.*\[\([0-9]\+\)%.*$/\1/p' | head -n 1 ;
+	amixer get Master | sed -n 's/^.*\[\([0-9]\+\)%.*$/\1/p' | head -n 1
 }
 
 volume_get_state()
 {
-	amixer get Master | sed -n 's/^.*\[\(o[nf]\+\).*$/\1/p' | head -n 1 ;
+	amixer get Master | sed -n 's/^.*\[\(o[nf]\+\).*$/\1/p' | head -n 1
 }
 
-volume_toggle()
+volume_toggle()			# 1 parameter: module index
 {
-	amixer set Master toggle ;
-	update_now "${1}" ;
+	amixer set Master toggle
+	update_now "$1"
 }
 
-volume_up()
+volume_mixer()
 {
-	amixer set Master 5%+ ;
-	update_now "${1}" ;
+	terminal -e alsamixer
 }
 
-volume_down()
+volume_up()				# 1 parameter: module index
 {
-	amixer set Master 5%- ;
-	update_now "${1}" ;
+	amixer set Master 5%+
+	update_now "$1"
+}
+
+volume_down()			# 1 parameter: module index
+{
+	amixer set Master 5%-
+	update_now "$1"
 }
 
 sp_status_volume()
 {
 	if ! which amixer > /dev/null ; then		# chech if amixer is installed
-		echo "no amixer" ;
-		exit ;
-	fi ;
+		echo "no amixer"
+		exit
+	fi
 
-	ICON_0="%{O1}${i_oct_mute}${SP}" ;		# mute
-	ICON_1="%{O-2}${i_fa_volume_off}%{O8}${SP}" ;	# low
-	ICON_2="%{O-1}${i_fa_volume_down}%{O5}${SP}" ;	# medium
-	ICON_3="%{O2}${i_fa_volume_up}${SP}" ;		# high
+	ICON_MUTE="%{O1}${i_oct_mute}${SP}"
+	ICON_LOW="%{O-2}${i_fa_volume_off}%{O8}${SP}"
+	ICON_MED="%{O-1}${i_fa_volume_down}%{O5}${SP}"
+	ICON_HIGH="%{O2}${i_fa_volume_up}${SP}"
 
-	CMD_1="volume_toggle $1" ;
-	CMD_3="terminal -e alsamixer" ;
-	CMD_4="volume_up $1" ;
-	CMD_5="volume_down $1" ;
-
-	vol_level="$(volume_get_level)" ;
-	case $(( ${vol_level} / 30 )) in
-		0) icon="$ICON_1" ;;
-		1) icon="$ICON_2" ;;
-		*) icon="$ICON_3" ;;
-	esac ;
+	volume_level="$(volume_get_level)"
+	case $(( $volume_level / 30 )) in
+		0)		icon="$ICON_LOW" ;;
+		1)		icon="$ICON_MED" ;;
+		*)		icon="$ICON_HIGH" ;;
+	esac
 	
 	# check if sound is mute
 	if [ "$(volume_get_state)" = "off" ] ; then
-		icon="$ICON_0" ;
-	fi ;
+		icon="$ICON_MUTE"
+	fi
 
-	begin_status_module ;
-		begin_click "1" "${CMD_1}" ;
-			begin_click "3" "${CMD_3}" ;
-				begin_click "4" "${CMD_4}" ;
-					begin_click "5" "${CMD_5}" ;
-						print_icon "${icon}" ;
-						print_vbar "${vol_level}" ;
-					end_click "5" ;
-				end_click "4" ;
-			end_click "3" ;
-		end_click "1" ;
-	end_status_module ;
+	begin_status_module
+		begin_click "1" "volume_toggle $1"
+			begin_click "3" "volume_mixer"
+				begin_click "4" "volume_up $1"
+					begin_click "5" "volume_down $1"
+						print_icon "$icon"
+						print_vbar "$volume_level"
+					end_click "5"
+				end_click "4"
+			end_click "3"
+		end_click "1"
+	end_status_module
 }
 
 # backlight module for status line
 
-backlight_down()
+backlight_get_level()
 {
-	index="${1}" ;
-	if ! [ -z "$(ls /sys/class/backlight/)" ] ; then
-		set -- /sys/class/backlight/* ;
-		bl_stat="$(( 100 * $(cat ${1}/actual_brightness) / $(cat ${1}/max_brightness) ))" ;
-		if [ "${bl_stat}" -gt 10 ] ; then			# make sure backlight is not too low
-			if which light > /dev/null ; then		# check if light is installed
-				light -U 2 ;
-			elif which xbacklight > /dev/null ; then	# check if xbacklight is installed
-				xbacklight -time 20 -steps 2 -2 ;
-			else
-				exit ;
-			fi ;
-			update_now "${index}" ;
-		fi ;
-	fi ;
+	set -- /sys/class/backlight/*
+	echo "$(( 100 * $(cat ${1}/actual_brightness) / $(cat ${1}/max_brightness) ))"
 }
 
-backlight_up()
+backlight_down()	# 1 parameter: module index
+{
+	if [ "$(backlight_get_level)" -gt 10 ] ; then		# make sure backlight is not too low
+		if which light > /dev/null ; then		# check if light is installed
+			light -U 2
+		elif which xbacklight > /dev/null ; then	# check if xbacklight is installed
+			xbacklight -time 20 -steps 2 -2
+		else
+			exit
+		fi
+		update_now "$1"
+	fi
+}
+
+backlight_up()	# 1 parameter: module index
 {
 	if which light > /dev/null ; then		# check if light is installed
-		light -A 2 ;
+		light -A 2
 	elif which xbacklight > /dev/null ; then	# check if xbacklight is installed
-		xbacklight -time 20 -steps 2 +2 ;
+		xbacklight -time 20 -steps 2 +2
 	else
-		exit ;
-	fi ;
-	update_now "${1}" ;
+		exit
+	fi
+	update_now "$1"
 }
 
 sp_status_backlight()
 {
-	ICON="${SP}${i_fa_sun_o}${SP}" ;
-
-	CMD_4="backlight_up ${1}" ;
-	CMD_5="backlight_down ${1}" ;
+	ICON="${SP}${i_fa_sun_o}${SP}"
 
 	if [ -z "$(ls /sys/class/backlight/)" ] ; then	# no backlight
-		echo "no backlight" ;
+		echo "no backlight"
 	else
-		set -- /sys/class/backlight/* ;
-		bl_stat="$(( 100 * $(cat ${1}/actual_brightness) / $(cat ${1}/max_brightness) ))" ;
-
-		begin_status_module ;
-			begin_click "4" "${CMD_4}" ;
-				begin_click "5" "${CMD_5}" ;
-					print_icon "${ICON}" ;
-					print_vbar "${bl_stat}" ;
-				end_click "5" ;
-			end_click "4" ;
-		end_status_module ;
-	fi ;
+		backlight_level="$(backlight_get_level)"
+		begin_status_module
+			begin_click "4" "backlight_up $1"
+				begin_click "5" "backlight_down $1"
+					print_icon "$ICON"
+					print_vbar "$backlight_level"
+				end_click "5"
+			end_click "4"
+		end_status_module
+	fi
 }
 
 # battery module for status line
 
+battery_cmd()
+{
+	xfce4-power-manager -c
+}
+
 sp_status_battery()
 {
-	ICON_0="${FC3}${SP}${i_fa_battery_0}" ;	# empty
-	ICON_1="${FC3}${SP}${i_fa_battery_1}" ;	# almost empty
-	ICON_2="${SP}${i_fa_battery_2}" ;	# half
-	ICON_3="${SP}${i_fa_battery_3}" ;	# almost full
-	ICON_4="${SP}${i_fa_battery_4}" ;	# full
-	ICON_C="${SP}${i_fa_plug}%{O2}" ;	# charging
-
-	CMD_3="xfce4-power-manager -c" ;
-	CMD_4="backlight_up" ;
-	CMD_5="backlight_down" ;
+	ICON_0="${FC3}${SP}${i_fa_battery_0}"	# empty
+	ICON_1="${FC3}${SP}${i_fa_battery_1}"	# almost empty
+	ICON_2="${SP}${i_fa_battery_2}"			# half
+	ICON_3="${SP}${i_fa_battery_3}"			# almost full
+	ICON_4="${SP}${i_fa_battery_4}"			# full
+	ICON_C="${SP}${i_fa_plug}%{O2}"			# charging
 
 	if !  [ -e /sys/class/power_supply/BAT*/ ] ; then
-		exit ;
-	fi ;
+		exit
+	fi
 
-	bat_cap="$(cat /sys/class/power_supply/BAT*/capacity)" ;
-	bat_stat="$(cat /sys/class/power_supply/BAT*/status)" ;
+	battery_cap="$(cat /sys/class/power_supply/BAT*/capacity)"
+	battery_stat="$(cat /sys/class/power_supply/BAT*/status)"
 
-	if [ "${bat_stat}" = "Charging" ] ; then
-		icon="${ICON_C}" ;
-		label="${SP}${bat_cap}%" ;
+	if [ "$battery_stat" = "Charging" ] ; then
+		icon="$ICON_C"
+		label="${SP}${bat_cap}%"
 	else
-		case $(( ${bat_cap} / 21 )) in
-			0) icon="${ICON_0}" ;;
-			1) icon="${ICON_1}" ;;
-			2) icon="${ICON_2}" ;;
-			3) icon="${ICON_3}" ;;
-			4) icon="${ICON_4}" ;;
-		esac ;
-		if [ "$bat_cap" -lt 97 ] ; then
-			label="${SP}${bat_cap}%" ;
-		else 
-			label="" ;
-		fi ;
-	fi ;
+		case $(( ${battery_cap} / 21 )) in
+			0)	icon="$ICON_0" ;;
+			1)	icon="$ICON_1" ;;
+			2)	icon="$ICON_2" ;;
+			3)	icon="$ICON_3" ;;
+			4)	icon="$ICON_4" ;;
+		esac
+		if [ "$battery_cap" -lt 97 ] ; then
+			label="${SP}${battery_cap}%"
+		else
+			label=""
+		fi
+	fi
 	
-	begin_status_module ;
-		begin_click "3" "${CMD_3}" ;
-			begin_click "4" "${CMD_4}" ;
-				begin_click "5" "${CMD_5}" ;
-					print_icon "${icon}" ;
-					printf "%s" "${label}" ;
-				end_click "5" ;
-			end_click "4" ;
-		end_click "3" ;
-	end_status_module ;
+	begin_status_module
+		begin_click "1" "battery_cmd"
+			print_icon "$icon"
+			printf "%s" "$label"
+		end_click "1"
+	end_status_module
 }
 
 # weather module for status line
 
-weather_notify()
+weather_notify()	# 1 parameter: location
 {
-	notify-send -i "weather-clouds" "Current weather" "$(weather-report -qm ${1})" ;
+	notify-send -i "weather-clouds" "Weather" "$(weather-report -qm $1)"
 }
 
 sp_status_weather()
 {
-#	ICON="${SP}${i_fae_sun_cloud}${SP}" ;
-	ICON="" ;
-	LOCATION="mmmm" ;	# ICAO airport code see https://en.wikipedia.org/wiki/List_of_airports_by_IATA_and_ICAO_code
-	CMD_1="weather_notify ${LOCATION}" ;
+#	ICON="${SP}${i_fae_sun_cloud}${SP}"
+	ICON=""
+	LOCATION="mmmm"	# ICAO airport code see https://en.wikipedia.org/wiki/List_of_airports_by_IATA_and_ICAO_code
 	
-	label="$(weather-report -qm --headers='Temperature' ${LOCATION} | sed 's/^.*: //;s/ C$/°C/')"
+	label="$(weather-report -qm --headers='Temperature' $LOCATION | sed 's/^.*: //;s/ C$/°C/')"
 
-	begin_status_module ;
-		begin_click "1" "${CMD_1}" ;
-			print_icon "${ICON}" ;
-			printf "%s" "${label}" ;
-		end_click "1" ;
-	end_status_module ;
+	begin_status_module
+		begin_click "1" "weather_notify $LOCATION"
+			print_icon "$ICON"
+			printf "%s" "$label"
+		end_click "1"
+	end_status_module
 }
 
 # clock module for status line
 
-show_date_toggle()
+show_date_toggle()	# 1 parameter: index module
 {
-	toggle_flag "show_date" ;
-	update_now "${1}" ;
+	toggle_flag "show_date"
+	update_now "$1"
 }
 
 calendar_notify()
 {
-	notify-send -i calendar "$(date)" "$(cal --color=always | sed 's/\x1b\[7m/<b><span background=\"#00BCD4\">/;s/\x1b\[27m/<\/span><\/b>/;s/\t//g')" ;
+	notify-send -i calendar "$(date)" "$(cal --color=always | sed 's/\x1b\[7m/<b><span background=\"#00BCD4\">/;s/\x1b\[27m/<\/span><\/b>/;s/\t//g')"
 }
 
 sp_status_clock()
 {
-	# ICON_TIME="${SP}${i_fa_clock_o}${SP}" ;
-	ICON_TIME="" ;
-	# ICON_DATE="${SP}${i_fa_calendar_o}${SP}" ;
-	ICON_DATE="" ;
+	# ICON_TIME="${SP}${i_fa_clock_o}${SP}"
+	ICON_TIME=""
+	# ICON_DATE="${SP}${i_fa_calendar_o}${SP}"
+	ICON_DATE=""
 
-	CMD_1="show_date_toggle ${1}" ;
-	CMD_3="calendar_notify" ;
+	current_date="$(date '+%x')"
+	current_time="$(date '+%R')"
 
-	current_date="$(date '+%x')" ;
-	current_time="$(date '+%R')" ;
-
-	begin_status_module ;
-		begin_click "1" "${CMD_1}" ;
-			begin_click "3" "${CMD_3}" ;
+	begin_status_module
+		begin_click "1" "show_date_toggle $1"
+			begin_click "3" "calendar_notify"
 				# check if date should be shown
 				if check_flag "show_date" ; then
-					print_icon "${ICON_DATE}" ;
-					printf "%s" "${current_date}${SEPARATOR}" ;
-				fi ;
-				print_icon "${ICON_TIME}" ;
-				printf "%s" "${current_time}" ;
-			end_click "3" ;
-		end_click "1" ;
-	end_status_module ;
+					print_icon "$ICON_DATE"
+					printf "%s" "${current_date}${SEPARATOR}"
+				fi
+				print_icon "$ICON_TIME"
+				printf "%s" "$current_time"
+			end_click "3"
+		end_click "1"
+	end_status_module
 }
 _EOF_
 fi ;
