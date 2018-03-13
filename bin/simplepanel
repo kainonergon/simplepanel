@@ -207,8 +207,8 @@ sp_menu()
 	button	"$1" \
 			"1" \
 			"menu_cmd" \
-			"${SP}%{F#FF35BF5C}%{T3}"
-			# " ${i_fa_bars}${SP}"
+			" ${i_fa_bars}${SP}"
+#			"${SP}%{F#FF35BF5C}%{T3}"
 }
 
 sp_button_minimize()
