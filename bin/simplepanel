@@ -698,7 +698,7 @@ sp_status_battery()
 
 	if [ "$battery_stat" = "Charging" ] ; then
 		icon="$ICON_C"
-		label="${SP}${bat_cap}%"
+		label="${SP}${battery_cap}%"
 	else
 		case $(( ${battery_cap} / 21 )) in
 			0)	icon="$ICON_0" ;;
