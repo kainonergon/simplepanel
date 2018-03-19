@@ -82,6 +82,13 @@ i='' i_fa_volume_down=$i
 i='' i_fa_volume_up=$i
 i='' i_oct_mute=$i
 i='' i_fae_sun_cloud=$i
+i='' i_fa_ban=$i
+i='' i_fa_lock=$i
+i='' i_fa_circle_o_notch=$i
+i='' i_fa_circle_o=$i
+i='' i_fa_moon_o=$i
+i='' i_fa_sign_out=$i
+i='' i_fa_refresh=$i
 i='' i_fa_power_off=$i
 
 # Set colors and lemonbar format codes. See more at https://github.com/LemonBoy/bar
@@ -320,14 +327,14 @@ rofi_menu() # 3 parameters: menu_title menu_width menu_list
 
 rofi_exit()
 {
-rofi_menu "Exit:" 140 \
-"1 cancel:true
-2 lock:screenlock
-3 suspend:systemctl suspend
-4 hibernate:systemctl hibernate
-5 logout:xdotool key --clearmodifiers super+shift+q
-6 reboot:systemctl reboot
-7 poweroff:systemctl poweroff"
+rofi_menu "Exit:" 160 \
+"$i_fa_ban cancel:true
+$i_fa_lock lock:screenlock
+$i_fa_circle_o suspend:systemctl suspend
+$i_fa_moon_o hibernate:systemctl hibernate
+$i_fa_sign_out logout:xdotool key --clearmodifiers super+shift+q
+$i_fa_refresh reboot:systemctl reboot
+$i_fa_power_off poweroff:systemctl poweroff"
 }
 
 sp_button_exit()
