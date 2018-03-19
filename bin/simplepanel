@@ -297,9 +297,10 @@ rofi_cmd()	# 2 parameters: menu_title menu_width
 		-theme-str "#listview { fixed-height: false; }"
 }
 
-# Menu list string format: each menu item begins with label, then semicolon, command, new line
-# "label_1:command_1
-# label_2:command2"
+# Menu list string format: each menu item begins with label, then semicolon, content, new line
+# "label_1:content_1
+# label_2:content_2"
+# Labels are shown in the menu. Content of the selected item goes to stdout
 
 rofi_menu() # 3 parameters: menu_title menu_width menu_list
 {
@@ -316,7 +317,7 @@ rofi_menu() # 3 parameters: menu_title menu_width menu_list
 	| {	read choice
 		for line in $menu_list ; do
 			if [ "$choice" = "${line%%:*}" ] ; then
-				eval "${line##*:}"
+				echo "${line##*:}"
 				break
 			fi
 		done
@@ -334,7 +335,11 @@ $i_fa_circle_o suspend:systemctl suspend
 $i_fa_moon_o hibernate:systemctl hibernate
 $i_fa_sign_out logout:xdotool key --clearmodifiers super+shift+q
 $i_fa_refresh reboot:systemctl reboot
-$i_fa_power_off poweroff:systemctl poweroff"
+$i_fa_power_off poweroff:systemctl poweroff" \
+| {
+	read line
+	eval "$line"
+  }
 }
 
 sp_button_exit()
