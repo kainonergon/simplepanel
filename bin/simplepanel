@@ -90,6 +90,12 @@ i='' i_fa_moon_o=$i
 i='' i_fa_sign_out=$i
 i='' i_fa_refresh=$i
 i='' i_fa_power_off=$i
+i='' i_fa_music=$i
+i='' i_fa_backward=$i
+i='' i_fa_play=$i
+i='' i_fa_pause=$i
+i='' i_fa_stop=$i
+i='' i_fa_forward=$i
 
 # Set colors and lemonbar format codes. See more at https://github.com/LemonBoy/bar
 # Adapta dark
@@ -482,6 +488,50 @@ sp_xkb()
 		end_module
 		xkb-switch -w	# wait for layout change
 	done
+}
+
+# mpd panel module
+
+sp_mpd()
+{
+	# TODO check if mpd is running
+	
+	ICON_MPD="${SP}${i_fa_music}${SP}"
+	ICON_PREV=" ${i_fa_backward}"
+	ICON_NEXT=" ${i_fa_forward}"
+	ICON_PLAY=" ${i_fa_play}%{O1}"
+	ICON_PAUSE=" ${i_fa_pause}"
+	
+	{
+		echo "player"			# force getting initial values
+		mpc idleloop player		# it prints a line on every change of 'player' state
+	} \
+	| {
+		while read line ; do
+			song="$(mpc current)"
+			# TODO if song name is too long, cut off the end
+			state="$(mpc|sed -n '2s/ .*$//p')"
+			if [ "$state" = "[playing]" ] ; then
+				icon_toggle="$ICON_PAUSE"
+			else
+				icon_toggle="$ICON_PLAY"
+			fi
+
+			begin_module "$1"
+				print_icon "$ICON_MPD"
+				printf "%s" "$song"
+				begin_click "1" "mpc prev"
+					print_icon "$ICON_PREV"
+				end_click "1"
+				begin_click "1" "mpc toggle"
+					print_icon "$icon_toggle"
+				end_click "1"
+				begin_click "1" "mpc next"
+					print_icon "$ICON_NEXT"
+				end_click "1"
+			end_module
+		done
+	  }
 }
 
 # status line module
@@ -974,4 +1024,3 @@ IFS='
 | while read line ; do
 	eval "$line"	# execute commands for clickable areas of lemonbar
 done ;
-
