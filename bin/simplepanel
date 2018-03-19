@@ -82,26 +82,27 @@ i='' i_fa_volume_down=$i
 i='' i_fa_volume_up=$i
 i='' i_oct_mute=$i
 i='' i_fae_sun_cloud=$i
+i='' i_fa_power_off=$i
 
 # Set colors and lemonbar format codes. See more at https://github.com/LemonBoy/bar
 # Adapta dark
 
-SP_BG_COLOR='#FF222D32'		# default background color
+SP_BG_COLOR='#FF222D32'	# default background color
 
-BC='%{B-}'					# use default background color
-BC1='%{B#FF00BCD4}'			# use alternative background color / highlight
+BC='%{B-}'		# use default background color
+BC1='%{B#FF00BCD4}'	# use alternative background color / highlight
 
-SP_FG_COLOR='#FFEFEFEF'		# default foreground color
+SP_FG_COLOR='#FFEFEFEF'	# default foreground color
 
-FC='%{F-}'					# use default foreground color	- text
-FC1='%{F#FF3A464B}'			# use foreground color 1		- separator
-FC2='%{F#FFCFD8DC}'			# use foreground color 2		- icons
-FC3='%{Fred}'				# use foreground color 3		- urgent
+FC='%{F-}'		# use default foreground color	- text
+FC1='%{F#FF3A464B}'	# use foreground color 1	- separator
+FC2='%{F#FFCFD8DC}'	# use foreground color 2	- icons
+FC3='%{F#FFA04020}'	# use foreground color 3	- urgent
 
-ICO="${FC2}%{T2}"			# use icon color and font
-TXT='%{F-}%{T1}'			# use text color and font
+ICO="${FC2}%{T2}"	# use icon color and font
+TXT='%{F-}%{T1}'	# use text color and font
 
-SP="%{O4}"					# small space
+SP="%{O4}"		# small space
 
 SEPARATOR="${SP}${FC1}%{R}%{O1}%{R}${FC}${SP}"
 
@@ -112,7 +113,7 @@ SEPARATOR="${SP}${FC1}%{R}%{O1}%{R}${FC}${SP}"
 # Add your own modules as you wish
 
 sp_modules="
-sp_menu
+sp_main_menu
 sp_separator
 sp_bspwm
 sp_center
@@ -123,11 +124,12 @@ sp_separator
 sp_xkb
 sp_separator
 sp_status
-sp_padding
+sp_separator
+sp_button_exit
 "
-#sp_button_minimize
-#sp_button_maximize
-
+# sp_button_minimize
+# sp_button_maximize
+# sp_padding
 
 # Module definitions
 # Every module gets its index as a positional parameter
@@ -188,43 +190,51 @@ sp_right()
 
 # button modules
 
-button()	# generic button module; 4 parameters: module_index mouse_button_number command icon
+button()	# generic button module; 5 parameters: module_index mouse_button_number command icon label
 {
 	begin_module "$1"
 		begin_click "$2" "$3"
 			print_icon "$4"
+			printf "%s" "$5"
 		end_click "$2"
 	end_module
 }
 
-menu_cmd()
+main_menu_cmd()
 {
-	rofi -show drun -location 1 -lines 28 -width 25
+	rofi	-show "drun" \
+		-modi "drun" \
+		-no-sidebar-mode \
+		-theme-str "#window { location: northwest; width: 25%; }" \
+		-theme-str "#listview { lines: 30; dynamic: true; fixed-height: false; }"
 }
 
-sp_menu()
+sp_main_menu()
 {
 	button	"$1" \
-			"1" \
-			"menu_cmd" \
-			" ${i_fa_bars}${SP}"
-#			"${SP}%{F#FF35BF5C}%{T3}"
+		"1" \
+		"main_menu_cmd" \
+		"${SP}${i_fa_bars}${SP}" \
+		"Menu"
+#		"${SP}%{F#FF35BF5C}%{T3}"
 }
 
 sp_button_minimize()
 {
 	button	"$1" \
-			"1" \
-			"whid hide" \
-			"${SP}${i_fa_window_minimize}"
+		"1" \
+		"whid hide" \
+		"${SP}${i_fa_window_minimize}" \
+		""
 }
 
 sp_button_maximize()
 {
 	button	"$1" \
-			"1" \
-			"bspc desktop -l next" \
-			"${SP}${i_fa_window_maximize}"
+		"1" \
+		"bspc desktop -l next" \
+		"${SP}${i_fa_window_maximize}" \
+		""
 }
 
 bspc_close()
@@ -235,9 +245,98 @@ bspc_close()
 sp_button_close()
 {
 	button	"$1" \
-			"1" \
-			"bspc_close" \
-			"${SP}${i_fa_close}"
+		"1" \
+		"bspc_close" \
+		"${SP}${i_fa_close}" \
+		""
+}
+
+# generic menu with rofi
+
+rofi_cmd()	# 2 parameters: menu_title menu_width
+{
+	menu_title="$1"
+	menu_width="$2"
+	X_MAX="$(wattr w $(lsw -r))"
+	Y_MAX="$(wattr h $(lsw -r))"
+
+	eval "$(xdotool getmouselocation --shell)"
+
+	if [ $X -lt $(( $X_MAX - $menu_width )) ] ; then
+		x_anchor="west"
+	else
+		x_anchor="east"
+		X="$X_MAX"
+	fi
+
+	if [ "$SP_BOTTOM" ] ; then	# panel at the bottom
+		y_anchor="south"
+		Y="$(( $Y_MAX - $SP_HEIGHT ))"
+	else				# panel at the top
+		y_anchor="north"
+		Y="$SP_HEIGHT"
+	fi
+
+	rofi	-dmenu \
+		-i \
+		-p "$menu_title" \
+		-theme-str "#window {
+			location: northwest;
+			anchor: $y_anchor$x_anchor;
+			x-offset: $X;
+			y-offset: $Y;
+			width: $menu_width;
+			}" \
+		-theme-str "#listview { fixed-height: false; }"
+}
+
+# Menu list string format: each menu item begins with label, then semicolon, command, new line
+# "label_1:command_1
+# label_2:command2"
+
+rofi_menu() # 3 parameters: menu_title menu_width menu_list
+{
+	menu_title="$1"
+	menu_width="$2"
+	menu_list="$3"
+
+	IFS='
+'
+	for line in $menu_list ; do
+		echo "${line%%:*}"
+	done \
+	| rofi_cmd "$menu_title" "$menu_width" \
+	| {	read choice
+		for line in $menu_list ; do
+			if [ "$choice" = "${line%%:*}" ] ; then
+				eval "${line##*:}"
+				break
+			fi
+		done
+	}
+}
+
+# exit button with rofi menu
+
+rofi_exit()
+{
+rofi_menu "Exit:" 140 \
+"1 cancel:true
+2 lock:screenlock
+3 suspend:systemctl suspend
+4 hibernate:systemctl hibernate
+5 logout:xdotool key --clearmodifiers super+shift+q
+6 reboot:systemctl reboot
+7 poweroff:systemctl poweroff"
+}
+
+sp_button_exit()
+{
+	button	"$1" \
+		"1" \
+		"rofi_exit" \
+		"${SP}${FC3}${i_fa_power_off}${SP}" \
+		""
 }
 
 # bspwm module
