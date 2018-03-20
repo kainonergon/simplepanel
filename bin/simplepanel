@@ -532,6 +532,7 @@ sp_mpd()
 	while true ; do
 		if mpc > /dev/null 2>&1 ; then	# check if mpd is running
 			{
+				killall mpc > /dev/null 2>&1	# prevent spawning mpc on panel restart
 				echo ""				# force getting initial values
 				mpc idleloop player	# get a new line on every 'player' event
 			} \
@@ -564,12 +565,12 @@ sp_mpd()
 				done
 			  }
 		fi
-		# mpd is not running, show start button
+		# mpd does not respond, show start button
 		button	"$1" \
 			"1" \
-			"mpd" \
+			"killall mpd mpc; mpd" \
 			"$ICON_MPD" \
-			"start mpd"
+			"(re)start mpd"
 		until mpc > /dev/null 2>&1 ; do	# wait until mpd starts
 			sleep 3
 		done
