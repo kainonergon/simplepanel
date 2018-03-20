@@ -1,7 +1,7 @@
 # Maintainer: kainonergon @forum.manjaro.org
 
 pkgname=simplepanel
-pkgver=0.6
+pkgver=0.7
 pkgrel=1
 pkgdesc="Lightweight modular panel for bspwm"
 arch=(any)
@@ -10,9 +10,7 @@ license=('MIT')
 depends=('dash'
 	'lemonbar-xft')
 optdepends=('bspwm-manjaro: window manager the panel is intended for'
-	'terminus-font: default font'
-	'nerd-fonts-terminus: iconic font'
-	'ttf-nerd-fonts-knack-complete-git: iconic font'
+	'ttf-nerd-fonts-knack-complete-git: default font'
 	'rofi: default menu'
 	'wireless_tools: wifi info'
 	'xtitle: window title info'
@@ -21,7 +19,8 @@ optdepends=('bspwm-manjaro: window manager the panel is intended for'
 	'xorg-xbacklight: alternative backlight control'
 	'acpilight: alternative backlight control'
 	'alsa-utils: sound volume info'
-	'weather: weather info')
+	'weather: weather info'
+	'mpc: mpd info')
 makedepends=('git')
 source=("git://github.com/kainonergon/$pkgname")
 md5sums=('SKIP')
