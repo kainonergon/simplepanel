@@ -44,19 +44,29 @@ TMP="/tmp/simplepanel"
 
 # Set fonts
 
-SP_FONT_1="-xos4-terminus-medium-r-normal--18-*-*-*-*-*-iso10646-1"	# main font
-SP_OFFSET_1=-2
-SP_FONT_2="TerminessTTF Nerd Font:pixelsize=16"		# iconic font
-SP_OFFSET_2=-2
-SP_FONT_3="monospace:pixelsize=18"					# extra font
+SP_FONT_1="Knack Nerd Font:pixelsize=16"		# main font
+SP_OFFSET_1=-14
+SP_FONT_2="Knack Nerd Font:pixelsize=16"		# iconic font
+SP_OFFSET_2=-14
+SP_FONT_3="-misc-knack nerd font-medium-r-normal--38-*-*-*-p-*-iso10646-1"	# extra font
 SP_OFFSET_3=0
 
+# SP_FONT_1="-xos4-terminus-medium-r-normal--18-*-*-*-*-*-iso10646-1"			# main font
+# SP_OFFSET_1=-4
+# SP_FONT_2="-misc-knack nerd font-medium-r-normal--16-*-*-*-p-*-iso10646-1"	# iconic font
+# SP_OFFSET_2=-2
+
 # SP_FONT_1="Knack Nerd Font:pixelsize=16"		# main font
-# SP_OFFSET_1=-1
+# SP_OFFSET_1=0
 # SP_FONT_2="Knack Nerd Font:pixelsize=16"		# iconic font
-# SP_OFFSET_2=-1
+# SP_OFFSET_2=0
+# SP_FONT_3="-misc-font logos-medium-r-normal--22-*-*-*-p-*-iso10646-1"		# extra font
+# SP_OFFSET_3=0
+
 # SP_FONT_3="font\-logos:pixelsize=22"			# extra font
 # SP_OFFSET_3=1
+# SP_FONT_3="Knack Nerd Font:pixelsize=38"		# extra font
+# SP_OFFSET_3=0
 
 # Nerd Font icon names. See https://github.com/ryanoasis/nerd-fonts/tree/master/bin/scripts/lib
 
@@ -100,7 +110,7 @@ i='' i_fa_forward=$i
 # Set colors and lemonbar format codes. See more at https://github.com/LemonBoy/bar
 # Adapta dark
 
-SP_BG_COLOR='#FF222D32'	# default background color
+SP_BG_COLOR='#E8222D32'	# default background color
 
 BC='%{B-}'		# use default background color
 BC1='%{B#FF00BCD4}'	# use alternative background color / highlight
@@ -117,7 +127,17 @@ TXT='%{F-}%{T1}'	# use text color and font
 
 SP="%{O4}"		# small space
 
-SEPARATOR="${SP}${FC1}%{R}%{O1}%{R}${FC}${SP}"
+# SEPARATOR="${SP}${FC1}%{R}%{O1}%{R}${FC}${SP}"
+# SEPARATOR_L="$SEPARATOR"
+
+SEPARATOR="${SP}%{T3}%{F#00000000}%{F-}%{T1}%{O-8}"
+SEPARATOR_L="%{T3}%{F#00000000}%{F-}%{T1}%{O-4}"
+
+# SEPARATOR="${SP}%{T3}%{F#00000000}%{F-}%{T1}${SP}"
+# SEPARATOR_L="${SP}%{T3}%{F#00000000}%{F-}%{T1}${SP}"
+
+# SEPARATOR="${SP}%{T3}%{F#00000000}%{R}%{R}%{F-}%{T1}${SP}"
+# SEPARATOR_L="${SP}%{T3}%{F#00000000}%{R}%{R}%{F-}%{T1}${SP}"
 
 # Set panel structure
 # Provide a string with a list of panel modules (blocks)
@@ -127,14 +147,15 @@ SEPARATOR="${SP}${FC1}%{R}%{O1}%{R}${FC}${SP}"
 
 sp_modules="
 sp_main_menu
-sp_separator
+sp_separator_l
 sp_bspwm
-sp_center
 sp_title
 sp_right
 sp_button_close
 sp_separator
 sp_xkb
+sp_separator
+sp_mpd
 sp_separator
 sp_status
 sp_separator
@@ -143,6 +164,7 @@ sp_button_exit
 # sp_button_minimize
 # sp_button_maximize
 # sp_padding
+# sp_center
 
 # Module definitions
 # Every module gets its index as a positional parameter
@@ -191,6 +213,11 @@ sp_separator()
 	echo "$1:$SEPARATOR"
 }
 
+sp_separator_l()
+{
+	echo "$1:$SEPARATOR_L"
+}
+
 sp_center()
 {
 	echo "$1:%{c}"
@@ -227,8 +254,8 @@ sp_main_menu()
 	button	"$1" \
 		"1" \
 		"main_menu_cmd" \
-		"${SP}${i_fa_bars}${SP}" \
-		"Menu"
+		" ${i_fa_bars}${SP}" \
+		""
 #		"${SP}%{F#FF35BF5C}%{T3}"
 }
 
@@ -290,8 +317,9 @@ rofi_cmd()	# 2 parameters: menu_title menu_width
 		Y="$SP_HEIGHT"
 	fi
 
-	rofi	-dmenu \
+	rofi -dmenu \
 		-i \
+		-no-custom \
 		-p "$menu_title" \
 		-theme-str "#window {
 			location: northwest;
@@ -342,10 +370,10 @@ $i_fa_moon_o hibernate:systemctl hibernate
 $i_fa_sign_out logout:xdotool key --clearmodifiers super+shift+q
 $i_fa_refresh reboot:systemctl reboot
 $i_fa_power_off poweroff:systemctl poweroff" \
-| {
-	read line
-	eval "$line"
-  }
+|	{
+		read line
+		eval "$line"
+	}
 }
 
 sp_button_exit()
@@ -405,8 +433,8 @@ sp_bspwm()
 		exit					# exit if bspwm does not respond
 	fi
 
-	ICON_TIL=" ${i_fa_window_restore}"
-	ICON_MON=" ${i_fa_window_maximize}%{O1}"
+	ICON_TIL="${SP}${i_fa_window_restore}"
+	ICON_MON="${SP}${i_fa_window_maximize}%{O1}"
 
 	module_index=$1
 
@@ -429,7 +457,7 @@ sp_bspwm()
 								M)	layout_ind="${ICO}${ICON_MON}${TXT}" ;;
 								*)	layout_ind="${SP}${desktop}${SP}" ;;
 							esac
-							bspwm_line="${bspwm_line}%{A1:bspc_layout:}${layout_ind}%{A1}" ;;
+							bspwm_line="${bspwm_line}%{A1:bspc_layout:}${SEPARATOR_L}${layout_ind}%{A1}" ;;
 					esac
 					shift
 				done
@@ -504,7 +532,7 @@ sp_mpd()
 	while true ; do
 		if mpc > /dev/null 2>&1 ; then	# check if mpd is running
 			{
-				echo ""			# force getting initial values
+				echo ""				# force getting initial values
 				mpc idleloop player	# get a new line on every 'player' event
 			} \
 			| {
@@ -605,13 +633,13 @@ sp_status()
 # Set status line structure
 
 sp_status_modules="
-sp_status_wifi
-sp_status_separator
 sp_status_volume
 sp_status_separator
 sp_status_backlight
 sp_status_separator
 sp_status_battery
+sp_status_separator
+sp_status_wifi
 sp_status_separator
 sp_status_weather
 sp_status_separator
@@ -829,6 +857,21 @@ backlight_up()	# 1 parameter: module index
 	update_now "$1"
 }
 
+backlight_menu()	# 1 parameter: module index
+{
+	rofi_menu " ${i_fa_sun_o}" 100 \
+"100%:100
+ 75%:75
+ 50%:50
+ 25%:25
+  5%:5" \
+	| {
+		read line
+		light -S "$line"
+	  }
+	update_now "$1"
+}
+
 sp_status_backlight()
 {
 	ICON="${SP}${i_fa_sun_o}${SP}"
@@ -838,12 +881,14 @@ sp_status_backlight()
 	else
 		backlight_level="$(backlight_get_level)"
 		begin_status_module
-			begin_click "4" "backlight_up $1"
-				begin_click "5" "backlight_down $1"
-					print_icon "$ICON"
-					print_vbar "$backlight_level"
-				end_click "5"
-			end_click "4"
+			begin_click "1" "backlight_menu $1"
+				begin_click "4" "backlight_up $1"
+					begin_click "5" "backlight_down $1"
+						print_icon "$ICON"
+						print_vbar "$backlight_level"
+					end_click "5"
+				end_click "4"
+			end_click "1"
 		end_status_module
 	fi
 }
