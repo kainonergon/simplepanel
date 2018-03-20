@@ -494,44 +494,58 @@ sp_xkb()
 
 sp_mpd()
 {
-	# TODO check if mpd is running
-	
 	ICON_MPD="${SP}${i_fa_music}${SP}"
 	ICON_PREV=" ${i_fa_backward}"
 	ICON_NEXT=" ${i_fa_forward}"
 	ICON_PLAY=" ${i_fa_play}%{O1}"
 	ICON_PAUSE=" ${i_fa_pause}"
+	MAX_LENGTH=20
 	
-	{
-		echo "player"			# force getting initial values
-		mpc idleloop player		# it prints a line on every change of 'player' state
-	} \
-	| {
-		while read line ; do
-			song="$(mpc current)"
-			# TODO if song name is too long, cut off the end
-			state="$(mpc|sed -n '2s/ .*$//p')"
-			if [ "$state" = "[playing]" ] ; then
-				icon_toggle="$ICON_PAUSE"
-			else
-				icon_toggle="$ICON_PLAY"
-			fi
-
-			begin_module "$1"
-				print_icon "$ICON_MPD"
-				printf "%s" "$song"
-				begin_click "1" "mpc prev"
-					print_icon "$ICON_PREV"
-				end_click "1"
-				begin_click "1" "mpc toggle"
-					print_icon "$icon_toggle"
-				end_click "1"
-				begin_click "1" "mpc next"
-					print_icon "$ICON_NEXT"
-				end_click "1"
-			end_module
+	while true ; do
+		if mpc > /dev/null 2>&1 ; then	# check if mpd is running
+			{
+				echo ""			# force getting initial values
+				mpc idleloop player	# get a new line on every 'player' event
+			} \
+			| {
+				while read line ; do
+					song="$(mpc current)"
+					if [ ${#song} -gt $MAX_LENGTH ] ; then	# trim long names
+						song="$(echo $song|cut -c -$MAX_LENGTH)…"
+					fi
+					state="$(mpc|sed -n '2s/ .*$//p')"
+					if [ "$state" = "[playing]" ] ; then
+						icon_toggle="$ICON_PAUSE"
+					else
+						icon_toggle="$ICON_PLAY"
+					fi
+		
+					begin_module "$1"
+						print_icon "$ICON_MPD"
+						printf "%s" "$song"
+						begin_click "1" "mpc prev"
+							print_icon "$ICON_PREV"
+						end_click "1"
+						begin_click "1" "mpc toggle"
+							print_icon "$icon_toggle"
+						end_click "1"
+						begin_click "1" "mpc next"
+							print_icon "$ICON_NEXT"
+						end_click "1"
+					end_module
+				done
+			  }
+		fi
+		# mpd is not running, show start button
+		button	"$1" \
+			"1" \
+			"mpd" \
+			"$ICON_MPD" \
+			"start mpd"
+		until mpc > /dev/null 2>&1 ; do	# wait until mpd starts
+			sleep 3
 		done
-	  }
+	done
 }
 
 # status line module
