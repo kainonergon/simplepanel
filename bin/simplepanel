@@ -520,6 +520,12 @@ sp_xkb()
 
 # mpd panel module
 
+mpd_hide_song_toggle()
+{
+	toggle_flag "mpd_hide_song"
+	mpc sendmessage update now
+}
+
 sp_mpd()
 {
 	ICON_MPD="${SP}${i_fa_music}${SP}"
@@ -528,51 +534,55 @@ sp_mpd()
 	ICON_PLAY=" ${i_fa_play}%{O1}"
 	ICON_PAUSE=" ${i_fa_pause}"
 	MAX_LENGTH=20
-	
+
+	killall mpc > /dev/null 2>&1	# prevent spawning mpc on panel restart
+
 	while true ; do
 		if mpc > /dev/null 2>&1 ; then	# check if mpd is running
-			{
-				killall mpc > /dev/null 2>&1	# prevent spawning mpc on panel restart
-				echo ""				# force getting initial values
-				mpc idleloop player	# get a new line on every 'player' event
-			} \
-			| {
-				while read line ; do
-					song="$(mpc current)"
-					if [ ${#song} -gt $MAX_LENGTH ] ; then	# trim long names
-						song="$(echo $song|cut -c -$MAX_LENGTH)…"
-					fi
-					state="$(mpc|sed -n '2s/ .*$//p')"
-					if [ "$state" = "[playing]" ] ; then
-						icon_toggle="$ICON_PAUSE"
-					else
-						icon_toggle="$ICON_PLAY"
-					fi
-		
-					begin_module "$1"
-						print_icon "$ICON_MPD"
-						printf "%s" "$song"
-						begin_click "1" "mpc prev"
-							print_icon "$ICON_PREV"
-						end_click "1"
-						begin_click "1" "mpc toggle"
-							print_icon "$icon_toggle"
-						end_click "1"
-						begin_click "1" "mpc next"
-							print_icon "$ICON_NEXT"
-						end_click "1"
-					end_module
-				done
-			  }
-		fi
-		# mpd does not respond, show start button
+			echo "start"				# force update on panel start
+			mpc idleloop player &		# get updates on player events
+			while mpc waitmessage update ; do true ; done	# get updates on messages
+		fi \
+		| while read line ; do
+			if check_flag "mpd_hide_song" ; then
+				song="…"
+			else
+				song="$(mpc current)"
+				if [ ${#song} -gt $MAX_LENGTH ] ; then	# trim long names
+					song="$(echo $song|cut -c -$MAX_LENGTH)…"
+				fi
+			fi
+			state="$(mpc|sed -n '2s/ .*$//p')"
+			if [ "$state" = "[playing]" ] ; then
+				icon_toggle="$ICON_PAUSE"
+			else
+				icon_toggle="$ICON_PLAY"
+			fi
+
+			begin_module "$1"
+				begin_click "1" "mpd_hide_song_toggle"
+					print_icon "$ICON_MPD"
+					printf "%s" "$song"
+				end_click "1"
+				begin_click "1" "mpc prev"
+					print_icon "$ICON_PREV"
+				end_click "1"
+				begin_click "1" "mpc toggle"
+					print_icon "$icon_toggle"
+				end_click "1"
+				begin_click "1" "mpc next"
+					print_icon "$ICON_NEXT"
+				end_click "1"
+			end_module
+		done
+		# mpd does not respond, show (re)start button
 		button	"$1" \
 			"1" \
 			"killall mpd mpc; mpd" \
 			"$ICON_MPD" \
 			"(re)start mpd"
 		until mpc > /dev/null 2>&1 ; do	# wait until mpd starts
-			sleep 3
+			sleep $UPD_INT
 		done
 	done
 }
