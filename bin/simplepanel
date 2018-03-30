@@ -44,28 +44,18 @@ TMP="/tmp/simplepanel"
 
 # Set fonts
 
-SP_FONT_1="Knack Nerd Font:pixelsize=16"		# main font
-SP_OFFSET_1=-14
-SP_FONT_2="Knack Nerd Font:pixelsize=16"		# iconic font
-SP_OFFSET_2=-14
-SP_FONT_3="-misc-knack nerd font-medium-r-normal--38-*-*-*-p-*-iso10646-1"	# extra font
+SP_FONT_1="-xos4-terminus-medium-r-normal--18-*-*-*-*-*-iso10646-1"	# main font
+SP_OFFSET_1=0
+SP_FONT_2="Knack Nerd Font:pixelsize=16"	# iconic font
+SP_OFFSET_2=0
+SP_FONT_3="mono:pixelsize=16"	# extra font
 SP_OFFSET_3=0
 
-# SP_FONT_1="-xos4-terminus-medium-r-normal--18-*-*-*-*-*-iso10646-1"			# main font
-# SP_OFFSET_1=-4
-# SP_FONT_2="-misc-knack nerd font-medium-r-normal--16-*-*-*-p-*-iso10646-1"	# iconic font
+# SP_FONT_1="Knack Nerd Font:pixelsize=16"	# main font
+# SP_OFFSET_1=-2
+# SP_FONT_2="Knack Nerd Font:pixelsize=16"	# iconic font
 # SP_OFFSET_2=-2
-
-# SP_FONT_1="Knack Nerd Font:pixelsize=16"		# main font
-# SP_OFFSET_1=0
-# SP_FONT_2="Knack Nerd Font:pixelsize=16"		# iconic font
-# SP_OFFSET_2=0
-# SP_FONT_3="-misc-font logos-medium-r-normal--22-*-*-*-p-*-iso10646-1"		# extra font
-# SP_OFFSET_3=0
-
-# SP_FONT_3="font\-logos:pixelsize=22"			# extra font
-# SP_OFFSET_3=1
-# SP_FONT_3="Knack Nerd Font:pixelsize=38"		# extra font
+# SP_FONT_3="-misc-font logos-medium-r-normal--22-*-*-*-p-*-iso10646-1"	# extra font
 # SP_OFFSET_3=0
 
 # Nerd Font icon names. See https://github.com/ryanoasis/nerd-fonts/tree/master/bin/scripts/lib
@@ -112,26 +102,23 @@ i='' i_fa_forward=$i
 
 SP_BG_COLOR='#E8222D32'	# default background color
 
-BC='%{B-}'		# use default background color
+BC='%{B-}'			# use default background color
 BC1='%{B#FF00BCD4}'	# use alternative background color / highlight
 
 SP_FG_COLOR='#FFEFEFEF'	# default foreground color
 
-FC='%{F-}'		# use default foreground color	- text
-FC1='%{F#FF3A464B}'	# use foreground color 1	- separator
+FC='%{F-}'			# use default foreground color	- text
+FC1='%{F#A03A464B}'	# use foreground color 1	- separator
 FC2='%{F#FFCFD8DC}'	# use foreground color 2	- icons
 FC3='%{F#FFA04020}'	# use foreground color 3	- urgent
 
 ICO="${FC2}%{T2}"	# use icon color and font
 TXT='%{F-}%{T1}'	# use text color and font
 
-SP="%{O4}"		# small space
+SP="%{O4}"			# small space
 
-# SEPARATOR="${SP}${FC1}%{R}%{O1}%{R}${FC}${SP}"
-# SEPARATOR_L="$SEPARATOR"
-
-SEPARATOR="${SP}%{T3}%{F#00000000}%{F-}%{T1}%{O-8}"
-SEPARATOR_L="%{T3}%{F#00000000}%{F-}%{T1}%{O-4}"
+SEPARATOR="${SP}${FC1}%{R}%{O1}%{R}${FC}${SP}"
+SEPARATOR_L="$SEPARATOR"
 
 # SEPARATOR="${SP}%{T3}%{F#00000000}%{F-}%{T1}${SP}"
 # SEPARATOR_L="${SP}%{T3}%{F#00000000}%{F-}%{T1}${SP}"
@@ -146,25 +133,28 @@ SEPARATOR_L="%{T3}%{F#00000000}%{F-}%{T1}%{O-4}"
 # Add your own modules as you wish
 
 sp_modules="
-sp_main_menu
-sp_separator_l
-sp_bspwm
-sp_title
-sp_right
-sp_button_close
-sp_separator
-sp_xkb
-sp_separator
-sp_mpd
-sp_separator
-sp_status
-sp_separator
-sp_button_exit
+	sp_main_menu
+	sp_separator_l
+	sp_desktops
+	sp_title
+	sp_right
+	sp_button_close
+	sp_separator
+	sp_xkb
+	sp_separator
+	sp_mpd
+	sp_separator
+	sp_status
+	sp_separator
+	sp_button_exit
 "
-# sp_button_minimize
-# sp_button_maximize
-# sp_padding
-# sp_center
+	# sp_button_minimize
+	# sp_button_maximize
+	# sp_padding
+	# sp_center
+	# sp_separator_l
+	# sp_bspwm
+
 
 # Module definitions
 # Every module gets its index as a positional parameter
@@ -174,32 +164,23 @@ sp_button_exit
 # The panel updates every time any module prints a line
 # Write your own modules as you wish
 
+# Generic function that prints all module content in one echo command.
+# It helps to avoid mixing outputs of different modules if they print at the same time.
+# Module string is a newline separated list, which is printed ignoring newlines and tabs.
+# Spaces are printed as normal characters.
+
+print_module()	# 2 parameters: module_index module_string
+{
+	IFS='
+	'
+	line="$1:"
+	for i in $2; do
+		line="$line$i"
+	done
+	echo "$line"
+}
+
 # general purpose functions to use in modules
-
-begin_module()		# start module; 1 parameter module_index
-{
-	printf "%s" "$1:"
-}
-
-end_module()		# finish module
-{
-	printf "\n"
-}
-
-begin_click()	# must be nested with end_click; 2 parameters: mouse_button_number command
-{
-	printf "%s" "%{A${1}:${2}:}"
-}
-
-end_click()		# must be nested with begin_click; 1 parameter: mouse_button_number
-{
-	printf "%s" "%{A${1}}"
-}
-
-print_icon()	# use icon color and font; 1 parameter: icon
-{
-	printf "%s" "${ICO}${1}${TXT}"
-}
 
 # formatting modules
 
@@ -232,12 +213,11 @@ sp_right()
 
 button()	# generic button module; 5 parameters: module_index mouse_button_number command icon label
 {
-	begin_module "$1"
-		begin_click "$2" "$3"
-			print_icon "$4"
-			printf "%s" "$5"
-		end_click "$2"
-	end_module
+	print_module "$1" \
+		"%{A$2:$3:}
+			$ICO$4
+			$TXT$5
+		%{A$2}"
 }
 
 main_menu_cmd()
@@ -245,8 +225,9 @@ main_menu_cmd()
 	rofi	-show "drun" \
 		-modi "drun" \
 		-no-sidebar-mode \
-		-theme-str "#window { location: northwest; width: 25%; }" \
-		-theme-str "#listview { lines: 30; dynamic: true; fixed-height: false; }"
+		-theme-str "#window { location: northwest; width: 40ch; }" \
+		-theme-str "#listview { lines: 20; dynamic: true; fixed-height: false; }"
+	# rofimenu
 }
 
 sp_main_menu()
@@ -256,7 +237,7 @@ sp_main_menu()
 		"main_menu_cmd" \
 		" ${i_fa_bars}${SP}" \
 		""
-#		"${SP}%{F#FF35BF5C}%{T3}"
+		# "${SP}%{F#FF35BF5C}%{T3}"
 }
 
 sp_button_minimize()
@@ -277,16 +258,11 @@ sp_button_maximize()
 		""
 }
 
-bspc_close()
-{
-	bspc node -c
-}
-
 sp_button_close()
 {
 	button	"$1" \
 		"1" \
-		"bspc_close" \
+		"xdo close" \
 		"${SP}${i_fa_close}" \
 		""
 }
@@ -330,11 +306,11 @@ rofi_cmd()	# 2 parameters: menu_title menu_width. The rest of parameters is pass
 			y-offset: $Y;
 			width: $menu_width;
 			}" \
-		-theme-str "#listview { fixed-height: false; }" \
+		-theme-str "#listview { fixed-height: false; scrollbar: false; }" \
 		$@
 }
 
-# Menu list string format: each menu item begins with label, then semicolon, content, new line
+# Menu list string format: each menu item begins with label, then semicolon, content, new line (or tab)
 # "label_1:content_1
 # label_2:content_2"
 # Labels are shown in the menu. Content of the selected item goes to stdout
@@ -346,7 +322,7 @@ rofi_menu() # 3 parameters: menu_title menu_width menu_list
 	menu_list="$3"
 
 	IFS='
-'
+	'
 	for line in $menu_list ; do
 		echo "${line%%:*}"
 	done \
@@ -354,7 +330,7 @@ rofi_menu() # 3 parameters: menu_title menu_width menu_list
 	| {	read choice
 		for line in $menu_list ; do
 			if [ "$choice" = "${line%%:*}" ] ; then
-				echo "${line##*:}"
+				echo "${line#*:}"
 				break
 			fi
 		done
@@ -365,18 +341,14 @@ rofi_menu() # 3 parameters: menu_title menu_width menu_list
 
 rofi_exit()
 {
-rofi_menu "Exit:" 160 \
-"$i_fa_ban cancel:true
-$i_fa_lock lock:screenlock
-$i_fa_circle_o suspend:systemctl suspend
-$i_fa_moon_o hibernate:systemctl hibernate
-$i_fa_sign_out logout:xdotool key --clearmodifiers super+shift+q
-$i_fa_refresh reboot:systemctl reboot
-$i_fa_power_off poweroff:systemctl poweroff" \
-|	{
-		read line
-		eval "$line"
-	}
+	eval $(rofi_menu "Exit:" 160 \
+		"$i_fa_ban cancel:true
+		$i_fa_lock lock:screenlock
+		$i_fa_circle_o suspend:systemctl suspend
+		$i_fa_moon_o hibernate:systemctl hibernate
+		$i_fa_sign_out logout:xdotool key --clearmodifiers super+shift+q
+		$i_fa_refresh reboot:systemctl reboot
+		$i_fa_power_off poweroff:systemctl poweroff")
 }
 
 sp_button_exit()
@@ -417,22 +389,18 @@ bspc_layout()	# switch to the next layout (tiling or monocle)
 
 sp_bspwm()
 {
-	if ! which bspc > /dev/null ; then	# check if bspwm is installed
-		begin_module "$1"
-			printf "%s" "no bspwm"
-		end_module
+	if ! which bspc > /dev/null 2>&1 ; then	# check if bspwm is installed
+		print_module "$1" "no bspwm"
 		exit
 	fi
 
 	i=10
-	while ! bspc wm -g > /dev/null && [ $i -gt 0 ] ; do	# wait while bspwm starts
+	while ! bspc wm -g > /dev/null 2>&1 && [ $i -gt 0 ] ; do	# wait while bspwm starts
 		sleep 0.5
-		i=$(( $i - 1 ))
+		i=$(( $i-1 ))
 	done
 	if [ $i -eq 0 ] ; then
-		begin_module "$1"
-			printf "%s" "no bspwm"
-		end_module
+		print_module "$1" "no bspwm"
 		exit					# exit if bspwm does not respond
 	fi
 
@@ -469,7 +437,8 @@ sp_bspwm()
 	}
 }
 
-# desktops module for any EWMH/NetWM compatible X Window Manager. Tested on bspwm and Openbox
+# desktops module for EWMH/NetWM compatible X Window Manager
+# tested with bspwm and openbox
 
 sp_desktops()
 {
@@ -523,9 +492,7 @@ title_cmd()
 sp_title()
 {
 	if ! which xtitle > /dev/null ; then		# check if xtitle is installed
-		begin_module "$1"
-			printf "%s" "no xtitle"
-		end_module
+		print_module "$1" "no xtitle"
 		exit
 	fi
 
@@ -544,9 +511,7 @@ xkb_next()
 sp_xkb()
 {
 	if ! which xkb-switch > /dev/null ; then	# check if xkb-switch is installed
-		begin_module "$1"
-			printf "no xkb-switch"
-		end_module
+		print_module "$1" "no xkb-switch"
 		exit
 	fi
 
@@ -554,13 +519,11 @@ sp_xkb()
 	# ICON="${SP}${i_fa_keyboard_o}"
 
 	while true; do
-		label="$(xkb-switch)"	# get layout name
-		begin_module "$1"
-			begin_click "1" "xkb_next"
-				print_icon "$ICON"
-				printf "%s" "$label"
-			end_click "1"
-		end_module
+		print_module "$1" \
+			"%{A1:xkb_next:}
+				$ICO$ICON
+				$TXT$(xkb-switch)
+			%{A1}"
 		xkb-switch -w	# wait for layout change
 	done
 }
@@ -613,23 +576,22 @@ sp_mpd()
 				icon_toggle="$ICON_PLAY"
 			fi
 
-			begin_module "$1"
-				begin_click "1" "mpd_hide_song_toggle"
-					begin_click "3" "mpd_menu"
-						print_icon "$ICON_MPD"
-						printf "%s" "$song"
-					end_click "3"
-				end_click "1"
-				begin_click "1" "mpc prev"
-					print_icon "$ICON_PREV"
-				end_click "1"
-				begin_click "1" "mpc toggle"
-					print_icon "$icon_toggle"
-				end_click "1"
-				begin_click "1" "mpc next"
-					print_icon "$ICON_NEXT"
-				end_click "1"
-			end_module
+			print_module "$1" \
+				"%{A1:mpd_hide_song_toggle:}
+					%{A3:mpd_menu:}
+						$ICO$ICON_MPD
+						$TXT$song
+					%{A3}
+				%{A1}
+				%{A1:mpc prev:}
+					$ICO$ICON_PREV
+				%{A1}
+				%{A1:mpc toggle:}
+					$icon_toggle
+				%{A1}
+				%{A1:mpc next:}
+					$ICON_NEXT
+				%{A1}"
 		done
 		# mpd does not respond, show (re)start button
 		button	"$1" \
@@ -650,7 +612,7 @@ sp_status()
 	status_line_index="$1"
 	
 	IFS='
-'
+	'
 
 	while true ; do							# start timed status line update
 		echo "all" > "${TMP}update_status_now"
@@ -700,34 +662,35 @@ sp_status()
 # Set status line structure
 
 sp_status_modules="
-sp_status_volume
-sp_status_separator
-sp_status_backlight
-sp_status_separator
-sp_status_battery
-sp_status_separator
-sp_status_wifi
-sp_status_separator
-sp_status_weather
-sp_status_separator
-sp_status_clock
+	sp_status_volume
+	sp_status_separator
+	sp_status_backlight
+	sp_status_separator
+	sp_status_battery
+	sp_status_separator
+	sp_status_wifi
+	sp_status_separator
+	sp_status_weather
+	sp_status_separator
+	sp_status_clock
 "
 
 # general purpose functions to use in status line modules
 
-begin_status_module()
+print_status_module()	# 1 parameter: module_string
 {
-	true ;
-}
-
-end_status_module()
-{
-	printf "\n"
+	IFS='
+	'
+	line=""
+	for i in $1; do
+		line="$line$i"
+	done
+	echo "$line"
 }
 
 update_now()	# 1 parameter: module_index
 {
-	echo "${1}" > "${TMP}update_status_now"
+	echo "$1" > "${TMP}update_status_now"
 }
 
 toggle_flag()	# 1 parameter: flag_name
@@ -747,17 +710,16 @@ check_flag()	# 1 parameter: flag_name
 print_vbar()	# vertical bar, from 0 to 100; 1 parameter: vbar_level
 {
 	case "$(( $1 / 11 ))" in
-		9|8)	label='█' ;;
-		7)		label='▇' ;;
-		6)		label='▆' ;;
-		5)		label='▅' ;;
-		4)		label='▄' ;;
-		3)		label='▃' ;;
-		2)		label='▂' ;;
-		1)		label='▁' ;;
-		*)		label=' ' ;;
+		9|8)	echo '█' ;;
+		7)		echo '▇' ;;
+		6)		echo '▆' ;;
+		5)		echo '▅' ;;
+		4)		echo '▄' ;;
+		3)		echo '▃' ;;
+		2)		echo '▂' ;;
+		1)		echo '▁' ;;
+		*)		echo ' ' ;;
 	esac
-	printf "%s" "${FC2}${label}${FC}"
 }
 
 # formatting modules for status line
@@ -807,14 +769,13 @@ sp_status_wifi()
 		label="no wifi"
 	fi
 	
-	begin_status_module
-		begin_click "1" "show_wifi_toggle $1"
-			begin_click "3" "wifi_menu"
-				print_icon "$ICON"
-				printf "%s" "$label"
-			end_click "3"
-		end_click "1"
-	end_status_module
+	print_status_module \
+		"%{A1:show_wifi_toggle $1:}
+			%{A3:wifi_menu:}
+				$ICO$ICON
+				$TXT$label
+			%{A3}
+		%{A1}"
 }
 
 # sound volume module for status line
@@ -855,7 +816,7 @@ volume_down()			# 1 parameter: module index
 sp_status_volume()
 {
 	if ! which amixer > /dev/null ; then		# chech if amixer is installed
-		echo "no amixer"
+		print_status_module "no amixer"
 		exit
 	fi
 
@@ -876,18 +837,17 @@ sp_status_volume()
 		icon="$ICON_MUTE"
 	fi
 
-	begin_status_module
-		begin_click "1" "volume_toggle $1"
-			begin_click "3" "volume_mixer"
-				begin_click "4" "volume_up $1"
-					begin_click "5" "volume_down $1"
-						print_icon "$icon"
-						print_vbar "$volume_level"
-					end_click "5"
-				end_click "4"
-			end_click "3"
-		end_click "1"
-	end_status_module
+	print_status_module \
+		"%{A1:volume_toggle $1:}
+			%{A3:volume_mixer:}
+				%{A4:volume_up $1:}
+					%{A5:volume_down $1:}
+						$ICO$icon
+						$(print_vbar $volume_level)
+					%{A5}
+				%{A4}
+			%{A3}
+		%{A1}"
 }
 
 # backlight module for status line
@@ -926,16 +886,13 @@ backlight_up()	# 1 parameter: module index
 
 backlight_menu()	# 1 parameter: module index
 {
-	rofi_menu " ${i_fa_sun_o}" 100 \
-"100%:100
- 75%:75
- 50%:50
- 25%:25
-  5%:5" \
-	| {
-		read line
-		light -S "$line"
-	  }
+	rofi_menu " ${i_fa_sun_o}" 80 \
+		"100%:100
+		 75%:75
+		 50%:50
+		 25%:25
+		  5%:5" \
+	| xargs light -S
 	update_now "$1"
 }
 
@@ -944,20 +901,21 @@ sp_status_backlight()
 	ICON="${SP}${i_fa_sun_o}${SP}"
 
 	if [ -z "$(ls /sys/class/backlight/)" ] ; then	# no backlight
-		echo "no backlight"
-	else
-		backlight_level="$(backlight_get_level)"
-		begin_status_module
-			begin_click "1" "backlight_menu $1"
-				begin_click "4" "backlight_up $1"
-					begin_click "5" "backlight_down $1"
-						print_icon "$ICON"
-						print_vbar "$backlight_level"
-					end_click "5"
-				end_click "4"
-			end_click "1"
-		end_status_module
+		print_status_module "no backlight"
+		exit
 	fi
+
+	backlight_level="$(backlight_get_level)"
+	
+	print_status_module \
+		"%{A1:backlight_menu $1:}
+			%{A4:backlight_up $1:}
+				%{A5:backlight_down $1:}
+					$ICO$ICON
+					$(print_vbar $backlight_level)
+				%{A5}
+			%{A4}
+		%{A1}"
 }
 
 # battery module for status line
@@ -1001,12 +959,11 @@ sp_status_battery()
 		fi
 	fi
 	
-	begin_status_module
-		begin_click "1" "battery_cmd"
-			print_icon "$icon"
-			printf "%s" "$label"
-		end_click "1"
-	end_status_module
+	print_status_module \
+		"%{A1:battery_cmd:}
+			$ICO$icon
+			$TXT$label
+		%{A1}"
 }
 
 # weather module for status line
@@ -1024,12 +981,11 @@ sp_status_weather()
 	
 	label="$(weather-report -qm --headers='Temperature' $LOCATION | sed 's/^.*: //;s/ C$/°C/')"
 
-	begin_status_module
-		begin_click "1" "weather_notify $LOCATION"
-			print_icon "$ICON"
-			printf "%s" "$label"
-		end_click "1"
-	end_status_module
+	print_status_module \
+		"%{A1:weather_notify $LOCATION:}
+			$ICO$ICON
+			$TXT$label
+		%{A1}"
 }
 
 # clock module for status line
@@ -1042,7 +998,10 @@ show_date_toggle()	# 1 parameter: index module
 
 calendar_notify()
 {
-	notify-send -i calendar "$(date)" "$(cal --color=always | sed 's/\x1b\[7m/<b><span background=\"#00BCD4\">/;s/\x1b\[27m/<\/span><\/b>/;s/\t//g')"
+	notify-send \
+		-i calendar \
+		"$(date)" \
+		"$(cal --color=always | sed 's/\x1b\[7m/<b><span background=\"#00BCD4\">/;s/\x1b\[27m/<\/span><\/b>/;s/\t//g')"
 }
 
 sp_status_clock()
@@ -1052,22 +1011,24 @@ sp_status_clock()
 	# ICON_DATE="${SP}${i_fa_calendar_o}${SP}"
 	ICON_DATE=""
 
-	current_date="$(date '+%x')"
-	current_time="$(date '+%R')"
+	# check if date should be shown
+	if check_flag "show_date" ; then
+		date_string="
+			$ICO$ICON_DATE
+			$TXT$(date '+%x')
+			${SEPARATOR}"
+	else
+		date_string=""
+	fi
 
-	begin_status_module
-		begin_click "1" "show_date_toggle $1"
-			begin_click "3" "calendar_notify"
-				# check if date should be shown
-				if check_flag "show_date" ; then
-					print_icon "$ICON_DATE"
-					printf "%s" "${current_date}${SEPARATOR}"
-				fi
-				print_icon "$ICON_TIME"
-				printf "%s" "$current_time"
-			end_click "3"
-		end_click "1"
-	end_status_module
+	print_status_module \
+		"%{A1:show_date_toggle $1:}
+			%{A3:calendar_notify:}
+				$date_string
+				$ICO$ICON_TIME
+				$TXT$(date '+%R')
+			%{A3}
+		%{A1}"
 }
 _EOF_
 fi ;
