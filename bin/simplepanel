@@ -469,10 +469,11 @@ sp_bspwm()
 	}
 }
 
-# desktops module for any EWMH/NetWM compatible X Window Manager
+# desktops module for any EWMH/NetWM compatible X Window Manager. Tested on bspwm and Openbox
 
 sp_desktops()
 {
+	pkill -x xprop
 	module_index="$1"
 	xprop	-root \
 			-spy \
@@ -491,7 +492,7 @@ sp_desktops()
 		esac
 		dt_line=""
 		dt_number=0
-		IFS=','
+		IFS=','		
 		for dt in $dt_names ; do
 			dt="${dt#*\"}"; dt="${dt%\"}"	# remove ""
 			if [ $dt_number -eq $dt_current ] ; then
@@ -503,11 +504,11 @@ sp_desktops()
 			fi
 			dt_number=$(($dt_number+1))
 		done
-		echo "${module_index}:\
-			%{A4:xdotool set_desktop --relative 1:}\
-				%{A5:xdotool set_desktop --relative -- -1:}\
-					${dt_line}\
-				%{A5}\
+		print_module "$module_index" \
+			"%{A4:xdotool set_desktop --relative 1:}
+				%{A5:xdotool set_desktop --relative -- -1:}
+					${dt_line}
+				%{A5}
 			%{A4}"
 	done
 }
