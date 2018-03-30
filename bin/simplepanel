@@ -475,7 +475,7 @@ sp_desktops()
 {
 	module_index="$1"
 	while true; do
-		dt_line="$(
+		dt_line=$(
 			wmctrl -d \
 			| while read dt_number dt_active c3 c4 c5 c6 c7 c8 dt_name; do
 				if [ "$dt_active" = "*" ] ; then
@@ -484,7 +484,7 @@ sp_desktops()
 					printf "%s" "%{A1:wmctrl -s $dt_number:}${SP}${dt_name}${SP}%{A1}"
 				fi
 			  done
-		)"
+		)
 		echo "${module_index}:${dt_line}"
 		sleep 0.1
 	done
