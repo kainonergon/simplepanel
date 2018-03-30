@@ -469,6 +469,27 @@ sp_bspwm()
 	}
 }
 
+# desktops module for any EWMH/NetWM compatible X Window Manager
+
+sp_desktops()
+{
+	module_index="$1"
+	while true; do
+		dt_line="$(
+			wmctrl -d \
+			| while read dt_number dt_active c3 c4 c5 c6 c7 c8 dt_name; do
+				if [ "$dt_active" = "*" ] ; then
+					printf "%s" "${BC1}${SP}${dt_name}${SP}${BC}"
+				else
+					printf "%s" "%{A1:wmctrl -s $dt_number:}${SP}${dt_name}${SP}%{A1}"
+				fi
+			  done
+		)"
+		echo "${module_index}:${dt_line}"
+		sleep 0.1
+	done
+}
+
 # title module
 
 title_cmd()
