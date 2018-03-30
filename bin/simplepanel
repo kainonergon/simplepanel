@@ -474,10 +474,12 @@ sp_bspwm()
 sp_desktops()
 {
 	module_index="$1"
-	while true; do
+	xprop -root -spy -notype _NET_CURRENT_DESKTOP _NET_DESKTOP_NAMES \
+	| while read line; do
 		dt_line=$(
 			wmctrl -d \
-			| while read dt_number dt_active c3 c4 c5 c6 c7 c8 dt_name; do
+			| while read dt_number dt_active c3 c4 c5 c6 c7 c8 c9 dt_name; do
+				[ "$dt_name" ] || dt_name="$c9"
 				if [ "$dt_active" = "*" ] ; then
 					printf "%s" "${BC1}${SP}${dt_name}${SP}${BC}"
 				else
@@ -493,10 +495,8 @@ sp_desktops()
 					${dt_line}\
 				%{A5}\
 			%{A4}"
-		sleep 0.1
 	done
 }
-
 # title module
 
 title_cmd()
