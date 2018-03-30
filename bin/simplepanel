@@ -479,6 +479,7 @@ sp_desktops()
 			-notype \
 			_NET_DESKTOP_NAMES \
 			_NET_CURRENT_DESKTOP \
+			_NET_ACTIVE_WINDOW \
 	| while read line; do
 		case "${line%% = *}" in
 			_NET_DESKTOP_NAMES)
