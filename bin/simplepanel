@@ -474,21 +474,34 @@ sp_bspwm()
 sp_desktops()
 {
 	module_index="$1"
-	xprop -root -spy -notype _NET_CURRENT_DESKTOP _NET_DESKTOP_NAMES \
+	xprop	-root \
+			-spy \
+			-notype \
+			_NET_DESKTOP_NAMES \
+			_NET_CURRENT_DESKTOP \
 	| while read line; do
-		dt_line=$(
-			wmctrl -d \
-			| while read dt_number dt_active c3 c4 c5 c6 c7 c8 c9 dt_name; do
-				[ "$dt_name" ] || dt_name="$c9"
-				if [ "$dt_active" = "*" ] ; then
-					printf "%s" "${BC1}${SP}${dt_name}${SP}${BC}"
-				else
-					if [ $(xdotool search --desktop $dt_number --limit 1 --class "") ] ; then
-						printf "%s" "%{A1:wmctrl -s $dt_number:}${SP}${dt_name}${SP}%{A1}"
-					fi
+		case "${line%% = *}" in
+			_NET_DESKTOP_NAMES)
+				dt_names="${line#* = }"
+				;;
+			_NET_CURRENT_DESKTOP)
+				dt_current="${line#* = }"
+				;;
+		esac
+		dt_line=""
+		dt_number=0
+		IFS=','
+		for dt in $dt_names ; do
+			dt="${dt#*\"}"; dt="${dt%\"}"	# remove ""
+			if [ $dt_number -eq $dt_current ] ; then
+				dt_line="${dt_line}${BC1}${SP}${dt}${SP}${BC}"
+			else
+				if [ $(xdotool search --desktop $dt_number --limit 1 --class "") ] ; then
+					dt_line="${dt_line}%{A1:wmctrl -s $dt_number:}${SP}${dt}${SP}%{A1}"
 				fi
-			  done
-		)
+			fi
+			dt_number=$(($dt_number+1))
+		done
 		echo "${module_index}:\
 			%{A4:xdotool set_desktop --relative 1:}\
 				%{A5:xdotool set_desktop --relative -- -1:}\
@@ -497,6 +510,7 @@ sp_desktops()
 			%{A4}"
 	done
 }
+
 # title module
 
 title_cmd()
