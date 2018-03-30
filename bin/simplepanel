@@ -481,11 +481,18 @@ sp_desktops()
 				if [ "$dt_active" = "*" ] ; then
 					printf "%s" "${BC1}${SP}${dt_name}${SP}${BC}"
 				else
-					printf "%s" "%{A1:wmctrl -s $dt_number:}${SP}${dt_name}${SP}%{A1}"
+					if [ $(xdotool search --desktop $dt_number --limit 1 --class "") ] ; then
+						printf "%s" "%{A1:wmctrl -s $dt_number:}${SP}${dt_name}${SP}%{A1}"
+					fi
 				fi
 			  done
 		)
-		echo "${module_index}:${dt_line}"
+		echo "${module_index}:\
+			%{A4:xdotool set_desktop --relative 1:}\
+				%{A5:xdotool set_desktop --relative -- -1:}\
+					${dt_line}\
+				%{A5}\
+			%{A4}"
 		sleep 0.1
 	done
 }
