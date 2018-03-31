@@ -438,7 +438,7 @@ sp_bspwm()
 }
 
 # desktops module for EWMH/NetWM compatible X Window Manager
-# tested with bspwm, jwm, icewm, openbox, fluxbox
+# tested with bspwm, jwm, icewm, openbox, fluxbox, awesome
 
 dt_next() {
 	xdotool set_desktop --relative 1
