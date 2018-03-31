@@ -438,35 +438,44 @@ sp_bspwm()
 }
 
 # desktops module for EWMH/NetWM compatible X Window Manager
-# tested with bspwm and openbox
+# tested with bspwm, jwm, icewm, openbox, fluxbox
 
-sp_desktops()
-{
-	pkill -x xprop
+dt_next() {
+	xdotool set_desktop --relative 1
+}
+
+dt_prev() {
+	xdotool set_desktop --relative -- -1
+}
+
+sp_desktops() {
+	pkill -x xprop >/dev/null 2>&1
+
 	module_index="$1"
-	xprop	-root \
-			-spy \
-			-notype \
-			_NET_DESKTOP_NAMES \
-			_NET_CURRENT_DESKTOP \
-			_NET_ACTIVE_WINDOW \
+	
+	# check what X properties are supported by wm
+	xprop_list="_NET_CURRENT_DESKTOP _NET_DESKTOP_NAMES _WIN_WORKSPACE_NAMES _NET_ACTIVE_WINDOW"
+	xprop_query=""
+	for prop in $xprop_list ; do
+		{ xprop -root -notype _NET_SUPPORTED | grep -q "$prop" ; } && xprop_query="$xprop_query $prop"
+	done
+	xprop -spy -root -notype $xprop_query \
 	| while read line; do
 		case "${line%% = *}" in
-			_NET_DESKTOP_NAMES)
-				dt_names="${line#* = }"
-				;;
+			_NET_DESKTOP_NAMES|\
+			_WIN_WORKSPACE_NAMES)
+				dt_names="${line#* = }" ;;
 			_NET_CURRENT_DESKTOP)
-				dt_current="${line#* = }"
-				;;
+				dt_current="${line#* = }" ;;
 		esac
 		dt_line=""
 		dt_number=0
-		IFS=','		
+		IFS=','
 		for dt in $dt_names ; do
 			dt="${dt#*\"}"; dt="${dt%\"}"	# remove ""
 			if [ $dt_number -eq $dt_current ] ; then
 				dt_line="${dt_line}${BC1}${SP}${dt}${SP}${BC}"
-			else
+			else	# check if desktop is occupied
 				if [ $(xdotool search --desktop $dt_number --limit 1 --class "") ] ; then
 					dt_line="${dt_line}%{A1:wmctrl -s $dt_number:}${SP}${dt}${SP}%{A1}"
 				fi
@@ -474,8 +483,8 @@ sp_desktops()
 			dt_number=$(($dt_number+1))
 		done
 		print_module "$module_index" \
-			"%{A4:xdotool set_desktop --relative 1:}
-				%{A5:xdotool set_desktop --relative -- -1:}
+			"%{A4:dt_next:}
+				%{A5:dt_prev:}
 					${dt_line}
 				%{A5}
 			%{A4}"
