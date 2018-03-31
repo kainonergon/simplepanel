@@ -128,7 +128,7 @@ SEPARATOR_L="$SEPARATOR"
 sp_modules="
 	sp_main_menu
 	sp_separator_l
-	sp_bspwm
+	sp_check_wm
 	sp_title
 	sp_right
 	sp_button_close
@@ -147,6 +147,7 @@ sp_modules="
 	# sp_center
 	# sp_separator_l
 	# sp_desktops
+	# sp_bspwm
 
 # Module definitions
 # Every module gets its index as a positional parameter
@@ -333,6 +334,24 @@ sp_button_exit() {
 		"rofi_exit" \
 		"${SP}${FC3}${i_fa_power_off}${SP}" \
 		""
+}
+
+# module that checks if bspwm or desktops module to use
+
+sp_check_wm() {
+	for i in {1..10} ; do
+		wmname="$(wmctrl -m | sed -n '/Name: /s///p')"
+		[ "$wmname" ] && break
+		sleep 0.5
+	done
+	if [ -z "$wmname" ] ; then
+		print_module "$1" "no wm detected"
+		exit
+	fi
+	case "$wmname" in
+		bspwm)	sp_bspwm "$1" & ;;
+		*)	sp_desktops "$1" & ;;
+	esac
 }
 
 # bspwm module
