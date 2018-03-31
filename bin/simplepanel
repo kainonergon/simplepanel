@@ -2,19 +2,16 @@
 #
 # simplepanel
 #
-# Simple panel script for bspwm with lemonbar
+# Simple panel script with lemonbar initially written for bspwm
 # Inspired by limepanel https://github.com/Chrysostomus/limepanel
 # Dash version
 
-DELAY="0.01" ;
+DELAY="0.01"	# delay needed for smooth panel update (due to lemonbar bug?)
 
 # Kill any older panel processes
 
-while [ $(pgrep -cx simplepanel) -gt 1 ] ; do pkill -ox -9 simplepanel ; done ;
-while [ $(pgrep -cx lemonbar) -gt 0 ] ; do pkill -ox -9 lemonbar ; done ;
-while [ $(pgrep -cx xtitle) -gt 0 ] ; do pkill -ox -9 xtitle ; done ;
-while [ $(pgrep -cx bspc) -gt 0 ] ; do pkill -ox -9 bspc ; done ;
-while [ $(pgrep -cx xkb-switch) -gt 0 ] ; do pkill -ox -9 xkb-switch ; done ;
+while [ $(pgrep -cx simplepanel) -gt 1 ] ; do pkill -ox -9 simplepanel ; done
+while [ $(pgrep -cx lemonbar) -gt 0 ] ; do pkill -ox -9 lemonbar ; done
 
 if ! [ -f "$HOME/.simplepanelrc" ] || [ "$1" = '--reset' ] ; then	# write default configuration file
     cat > "$HOME/.simplepanelrc"<<"_EOF_"
@@ -33,10 +30,6 @@ SP_HEIGHT=24
 SP_POSITION=""
 SP_BOTTOM=""		# panel at the top of the screen
 # SP_BOTTOM="-b"	# panel at the bottom of the screen
-
-# Set update interval (in seconds) for status line
-
-UPD_INT=3
 
 # Directory for temporary files
 
@@ -102,12 +95,12 @@ i='' i_fa_forward=$i
 
 SP_BG_COLOR='#E8222D32'	# default background color
 
-BC='%{B-}'			# use default background color
+BC='%{B-}'		# use default background color
 BC1='%{B#FF00BCD4}'	# use alternative background color / highlight
 
 SP_FG_COLOR='#FFEFEFEF'	# default foreground color
 
-FC='%{F-}'			# use default foreground color	- text
+FC='%{F-}'		# use default foreground color	- text
 FC1='%{F#A03A464B}'	# use foreground color 1	- separator
 FC2='%{F#FFCFD8DC}'	# use foreground color 2	- icons
 FC3='%{F#FFA04020}'	# use foreground color 3	- urgent
@@ -115,7 +108,7 @@ FC3='%{F#FFA04020}'	# use foreground color 3	- urgent
 ICO="${FC2}%{T2}"	# use icon color and font
 TXT='%{F-}%{T1}'	# use text color and font
 
-SP="%{O4}"			# small space
+SP="%{O4}"		# small space
 
 SEPARATOR="${SP}${FC1}%{R}%{O1}%{R}${FC}${SP}"
 SEPARATOR_L="$SEPARATOR"
@@ -135,7 +128,7 @@ SEPARATOR_L="$SEPARATOR"
 sp_modules="
 	sp_main_menu
 	sp_separator_l
-	sp_desktops
+	sp_bspwm
 	sp_title
 	sp_right
 	sp_button_close
@@ -153,8 +146,7 @@ sp_modules="
 	# sp_padding
 	# sp_center
 	# sp_separator_l
-	# sp_bspwm
-
+	# sp_desktops
 
 # Module definitions
 # Every module gets its index as a positional parameter
@@ -169,8 +161,7 @@ sp_modules="
 # Module string is a newline separated list, which is printed ignoring newlines and tabs.
 # Spaces are printed as normal characters.
 
-print_module()	# 2 parameters: module_index module_string
-{
+print_module() {	# 2 parameters: module_index module_string
 	IFS='
 	'
 	line="$1:"
@@ -180,39 +171,31 @@ print_module()	# 2 parameters: module_index module_string
 	echo "$line"
 }
 
-# general purpose functions to use in modules
-
 # formatting modules
 
-sp_padding()
-{
+sp_padding() {
 	echo "$1:$SP"
 }
 
-sp_separator()
-{
+sp_separator() {
 	echo "$1:$SEPARATOR"
 }
 
-sp_separator_l()
-{
+sp_separator_l() {
 	echo "$1:$SEPARATOR_L"
 }
 
-sp_center()
-{
+sp_center() {
 	echo "$1:%{c}"
 }
 
-sp_right()
-{
+sp_right() {
 	echo "$1:%{r}"
 }
 
 # button modules
 
-button()	# generic button module; 5 parameters: module_index mouse_button_number command icon label
-{
+button() {	# generic button module; 5 parameters: module_index mouse_button_number command icon label
 	print_module "$1" \
 		"%{A$2:$3:}
 			$ICO$4
@@ -220,8 +203,7 @@ button()	# generic button module; 5 parameters: module_index mouse_button_number
 		%{A$2}"
 }
 
-main_menu_cmd()
-{
+main_menu_cmd() {
 	rofi	-show "drun" \
 		-modi "drun" \
 		-no-sidebar-mode \
@@ -230,18 +212,17 @@ main_menu_cmd()
 	# rofimenu
 }
 
-sp_main_menu()
-{
+sp_main_menu() {
+	ICON=" ${i_fa_bars}${SP}"	# bars
+	# ICON="${SP}%{F#FF35BF5C}%{T3}"	# Manjaro logo
 	button	"$1" \
 		"1" \
 		"main_menu_cmd" \
-		" ${i_fa_bars}${SP}" \
+		"$ICON" \
 		""
-		# "${SP}%{F#FF35BF5C}%{T3}"
 }
 
-sp_button_minimize()
-{
+sp_button_minimize() {
 	button	"$1" \
 		"1" \
 		"whid hide" \
@@ -249,8 +230,7 @@ sp_button_minimize()
 		""
 }
 
-sp_button_maximize()
-{
+sp_button_maximize() {
 	button	"$1" \
 		"1" \
 		"bspc desktop -l next" \
@@ -258,8 +238,7 @@ sp_button_maximize()
 		""
 }
 
-sp_button_close()
-{
+sp_button_close() {
 	button	"$1" \
 		"1" \
 		"xdo close" \
@@ -269,11 +248,8 @@ sp_button_close()
 
 # generic menu with rofi
 
-rofi_cmd()	# 2 parameters: menu_title menu_width. The rest of parameters is passed to rofi
-{
-	menu_title="$1"
-	shift
-	menu_width="$1"
+rofi_cmd() {	# 1 parameter: menu_width. The rest of parameters is passed to rofi
+	menu_width="$1"	# width in pixels
 	shift
 	X_MAX="$(wattr w $(lsw -r))"
 	Y_MAX="$(wattr h $(lsw -r))"
@@ -295,19 +271,21 @@ rofi_cmd()	# 2 parameters: menu_title menu_width. The rest of parameters is pass
 		Y="$SP_HEIGHT"
 	fi
 
-	rofi -dmenu \
+	rofi $@ \
 		-i \
 		-no-custom \
-		-p "$menu_title" \
-		-theme-str "#window {
-			location: northwest;
-			anchor: $y_anchor$x_anchor;
-			x-offset: $X;
-			y-offset: $Y;
-			width: $menu_width;
-			}" \
-		-theme-str "#listview { fixed-height: false; scrollbar: false; }" \
-		$@
+		-theme-str "
+			#window {
+				location: northwest;
+				anchor: $y_anchor$x_anchor;
+				x-offset: $X;
+				y-offset: $Y;
+				width: $menu_width;
+				}
+			#listview {
+				fixed-height: false;
+				scrollbar: false;
+			}"
 }
 
 # Menu list string format: each menu item begins with label, then semicolon, content, new line (or tab)
@@ -315,8 +293,7 @@ rofi_cmd()	# 2 parameters: menu_title menu_width. The rest of parameters is pass
 # label_2:content_2"
 # Labels are shown in the menu. Content of the selected item goes to stdout
 
-rofi_menu() # 3 parameters: menu_title menu_width menu_list
-{
+rofi_menu() { # 3 parameters: menu_title menu_width menu_list
 	menu_title="$1"
 	menu_width="$2"
 	menu_list="$3"
@@ -326,7 +303,7 @@ rofi_menu() # 3 parameters: menu_title menu_width menu_list
 	for line in $menu_list ; do
 		echo "${line%%:*}"
 	done \
-	| rofi_cmd "$menu_title" "$menu_width" \
+	| rofi_cmd "$menu_width" -dmenu -p "$menu_title" \
 	| {	read choice
 		for line in $menu_list ; do
 			if [ "$choice" = "${line%%:*}" ] ; then
@@ -339,8 +316,7 @@ rofi_menu() # 3 parameters: menu_title menu_width menu_list
 
 # exit button with rofi menu
 
-rofi_exit()
-{
+rofi_exit() {
 	eval $(rofi_menu "Exit:" 160 \
 		"$i_fa_ban cancel:true
 		$i_fa_lock lock:screenlock
@@ -351,8 +327,7 @@ rofi_exit()
 		$i_fa_power_off poweroff:systemctl poweroff")
 }
 
-sp_button_exit()
-{
+sp_button_exit() {
 	button	"$1" \
 		"1" \
 		"rofi_exit" \
@@ -362,38 +337,31 @@ sp_button_exit()
 
 # bspwm module
 
-bspc_next()	# focus next occupied desktop
-{
+bspc_next() {	# focus next occupied desktop
 	bspc desktop -f next.occupied
 }
 
-bspc_prev()	# focus previous occupied desktop
-{
+bspc_prev() {	# focus previous occupied desktop
 	bspc desktop -f prev.occupied
 }
 
-bspc_last()	# focus last focused desktop
-{
+bspc_last()	{	# focus last focused desktop
 	bspc desktop -f last
 }
 
-bspc_focus()	# focus desktop; 1 parameter: desktop
-{
+bspc_focus() {	# focus desktop; 1 parameter: desktop
 	bspc desktop -f "$1"
 }
 
-bspc_layout()	# switch to the next layout (tiling or monocle)
-{
+bspc_layout() {	# switch to the next layout (tiling or monocle)
 	bspc desktop -l next
 }
 
-sp_bspwm()
-{
+sp_bspwm() {
 	if ! which bspc > /dev/null 2>&1 ; then	# check if bspwm is installed
 		print_module "$1" "no bspwm"
 		exit
 	fi
-
 	i=10
 	while ! bspc wm -g > /dev/null 2>&1 && [ $i -gt 0 ] ; do	# wait while bspwm starts
 		sleep 0.5
@@ -403,6 +371,7 @@ sp_bspwm()
 		print_module "$1" "no bspwm"
 		exit					# exit if bspwm does not respond
 	fi
+	pkill -x bspc >/dev/null 2>&1
 
 	ICON_TIL="${SP}${i_fa_window_restore}"
 	ICON_MON="${SP}${i_fa_window_maximize}%{O1}"
@@ -410,35 +379,37 @@ sp_bspwm()
 	module_index=$1
 
 	bspc subscribe \
-	| {
-		IFS=':'
-		while read line ; do
-			bspwm_line="${module_index}:%{A4:bspc_next:}%{A5:bspc_prev:}"
-				set -- $line
-				while [ $# -gt 0 ] ; do
-					desktop="${1#?}"
-					case $1 in
-						O*|F*|U*)	# highlight focused desktop (occupied, free or urgent)
-							bspwm_line="${bspwm_line}%{A1:bspc_last:}${BC1}${SP}${desktop}${SP}${BC}%{A1}" ;;
-						o*|u*)		# show unfocused desktops (occupied or urgent)
-							bspwm_line="${bspwm_line}%{A1:bspc_focus ${desktop}:}${SP}${desktop}${SP}%{A1}" ;;
-						L*)		# show current layout (tiling or monocle)
-							case "${desktop}" in
-								T)	layout_ind="${ICO}${ICON_TIL}${TXT}" ;;
-								M)	layout_ind="${ICO}${ICON_MON}${TXT}" ;;
-								*)	layout_ind="${SP}${desktop}${SP}" ;;
-							esac
-							bspwm_line="${bspwm_line}%{A1:bspc_layout:}${SEPARATOR_L}${layout_ind}%{A1}" ;;
-					esac
-					shift
-				done
-			echo "${bspwm_line}%{A5}%{A4}"
+	| {	while read line ; do
+			bspwm_line=""
+			IFS=':'
+			for entry in $line ; do
+				desktop="${entry#?}"
+				case "$entry" in
+					O*|F*|U*)	# highlight focused desktop (occupied, free or urgent)
+						bspwm_line="${bspwm_line}%{A1:bspc_last:}${BC1}${SP}${desktop}${SP}${BC}%{A1}" ;;
+					o*|u*)		# show unfocused desktops (occupied or urgent)
+						bspwm_line="${bspwm_line}%{A1:bspc_focus ${desktop}:}${SP}${desktop}${SP}%{A1}" ;;
+					L*)		# show current layout (tiling or monocle)
+						case "${desktop}" in
+							T)	layout_ind="${ICO}${ICON_TIL}${TXT}" ;;
+							M)	layout_ind="${ICO}${ICON_MON}${TXT}" ;;
+							*)	layout_ind="${SP}${desktop}${SP}" ;;
+						esac
+						bspwm_line="${bspwm_line}%{A1:bspc_layout:}${SEPARATOR_L}${layout_ind}%{A1}" ;;
+				esac
+			done
+			print_module "$module_index" \
+				"%{A4:bspc_next:}
+					%{A5:bspc_prev:}
+						$bspwm_line
+					%{A5}
+				%{A4}"
 		done
 	}
 }
 
 # desktops module for EWMH/NetWM compatible X Window Manager
-# tested with bspwm, jwm, icewm, openbox, fluxbox, awesome
+# tested with bspwm, jwm, icewm, pekwm, openbox, fluxbox, awesome
 
 dt_next() {
 	xdotool set_desktop --relative 1
@@ -454,18 +425,21 @@ sp_desktops() {
 	module_index="$1"
 	
 	# check what X properties are supported by wm
-	xprop_list="_NET_CURRENT_DESKTOP _NET_DESKTOP_NAMES _WIN_WORKSPACE_NAMES _NET_ACTIVE_WINDOW"
+	xprop_list="_NET_ACTIVE_WINDOW _NET_DESKTOP_NAMES _NET_CURRENT_DESKTOP _WIN_WORKSPACE_NAMES _WIN_WORKSPACE"
 	xprop_query=""
 	for prop in $xprop_list ; do
-		{ xprop -root -notype _NET_SUPPORTED | grep -q "$prop" ; } && xprop_query="$xprop_query $prop"
+		{ xprop -root -notype _NET_SUPPORTED _WIN_PROTOCOLS | grep -q "$prop" ; } && xprop_query="$xprop_query $prop"
 	done
+	dt_names=""
+	dt_current=0
 	xprop -spy -root -notype $xprop_query \
 	| while read line; do
 		case "${line%% = *}" in
 			_NET_DESKTOP_NAMES|\
 			_WIN_WORKSPACE_NAMES)
 				dt_names="${line#* = }" ;;
-			_NET_CURRENT_DESKTOP)
+			_NET_CURRENT_DESKTOP|\
+			_WIN_WORKSPACE)
 				dt_current="${line#* = }" ;;
 		esac
 		dt_line=""
@@ -493,17 +467,16 @@ sp_desktops() {
 
 # title module
 
-title_cmd()
-{
-	MonocleSwitcher
+title_cmd() {
+	rofi_cmd "500" -modi windowcd -show windowcd -display-windowcd "Window:" -no-sidebar-mode
 }
 
-sp_title()
-{
+sp_title() {
 	if ! which xtitle > /dev/null ; then		# check if xtitle is installed
 		print_module "$1" "no xtitle"
 		exit
 	fi
+	pkill -x xtitle >/dev/null 2>&1
 
 	FORMAT="${1}:%{A1:title_cmd:} %s%{A1}\n"
 
@@ -512,17 +485,16 @@ sp_title()
 
 # keyboard layout indicator module
 
-xkb_next()
-{
+xkb_next() {
 	xkb-switch -n	# switch to the next layout
 }
 
-sp_xkb()
-{
+sp_xkb() {
 	if ! which xkb-switch > /dev/null ; then	# check if xkb-switch is installed
 		print_module "$1" "no xkb-switch"
 		exit
 	fi
+	pkill -x xkb-switch >/dev/null 2>&1
 
 	ICON=""
 	# ICON="${SP}${i_fa_keyboard_o}"
@@ -539,21 +511,18 @@ sp_xkb()
 
 # mpd panel module
 
-mpd_hide_song_toggle()
-{
+mpd_hide_song_toggle() {
 	toggle_flag "mpd_hide_song"
 	mpc sendmessage update now
 }
 
-mpd_menu()
-{
+mpd_menu() {
 	mpc playlist \
-	| rofi_cmd "Play:" 400 -format d \
+	| rofi_cmd 400 -format d -dmenu -p "Play:" \
 	| xargs mpc play
 }
 
-sp_mpd()
-{
+sp_mpd() {
 	ICON_MPD="${SP}${i_fa_music}${SP}"
 	ICON_PREV=" ${i_fa_backward}"
 	ICON_NEXT=" ${i_fa_forward}"
@@ -561,7 +530,7 @@ sp_mpd()
 	ICON_PAUSE=" ${i_fa_pause}"
 	MAX_LENGTH=20
 
-	killall mpc > /dev/null 2>&1	# prevent spawning mpc on panel restart
+	pkill -x mpc >/dev/null 2>&1	# prevent spawning mpc on panel restart
 
 	while true ; do
 		if mpc > /dev/null 2>&1 ; then	# check if mpd is running
@@ -605,7 +574,7 @@ sp_mpd()
 		# mpd does not respond, show (re)start button
 		button	"$1" \
 			"1" \
-			"killall mpd mpc; mpd" \
+			"killall -q mpd mpc; mpd" \
 			"$ICON_MPD" \
 			"(re)start mpd"
 		until mpc > /dev/null 2>&1 ; do	# wait until mpd starts
@@ -614,59 +583,11 @@ sp_mpd()
 	done
 }
 
-# status line module
-
-sp_status()
-{
-	status_line_index="$1"
-	
-	IFS='
-	'
-
-	while true ; do							# start timed status line update
-		echo "all" > "${TMP}update_status_now"
-		sleep "$UPD_INT"
-	done &
-
-	while read index < "${TMP}update_status_now"; do
-		status_line="$status_line_index:"
-		if [ $index = "all" ] ; then		# update all status modules
-			sp_status_values=""
-			i=0
-			for status_module in $sp_status_modules ; do
-				value="$($status_module $i)"
-				sp_status_values="${sp_status_values}${value}${IFS}"	# store the value
-				status_line="${status_line}${value}"					# add the value to the status line
-				i=$(( $i+1 ))
-			done
-		else								# update one status module
-			set -- $sp_status_modules
-			shift $index
-			new_value="$($1 $index)"
-			set -- $sp_status_values
-			i=0
-			sp_status_values=""
-			while [ $# -gt 0 ] ; do			# read the old values
-				if [ $i -eq $index ] ; then
-					value="$new_value"		# replace the value that updates
-				else
-					value="$1"				# keep all other values
-				fi
-				sp_status_values="${sp_status_values}${value}${IFS}"	# store the value
-				status_line="$status_line$value"						# add the value to the status line
-				i=$(( $i+1 ))
-				shift						# remove old stored value
-			done
-		fi
-		echo "$status_line"
-	done
-}
-
 # Modules for status line do not loop
 # They can be combined into one status line that updates every $UPD_INT seconds
 # First positional parameter is module index
 # Modules for status line do not print their module index
-# If the index is redirected to "${TMP}update_status_now" the module updates at once (e.g. volume change)
+# If the index is redirected to "${TMP}/update_status_now" the module updates at once (e.g. volume change)
 
 # Set status line structure
 
@@ -686,8 +607,7 @@ sp_status_modules="
 
 # general purpose functions to use in status line modules
 
-print_status_module()	# 1 parameter: module_string
-{
+print_status_module() {	# 1 parameter: module_string
 	IFS='
 	'
 	line=""
@@ -697,62 +617,55 @@ print_status_module()	# 1 parameter: module_string
 	echo "$line"
 }
 
-update_now()	# 1 parameter: module_index
-{
-	echo "$1" > "${TMP}update_status_now"
+update_now() {	# 1 parameter: module_index
+	echo "$1" > "${TMP}/update_status_now"
 }
 
-toggle_flag()	# 1 parameter: flag_name
-{
-	if [ -f "${TMP}${1}" ] ; then
-		rm "${TMP}${1}"
+toggle_flag() {	# 1 parameter: flag_name
+	if [ -f "${TMP}/${1}" ] ; then
+		rm "${TMP}/${1}"
 	else
-		touch "${TMP}${1}"
+		touch "${TMP}/${1}"
 	fi
 }
 
-check_flag()	# 1 parameter: flag_name
-{
-	[ -f "${TMP}${1}" ]
+check_flag() {	# 1 parameter: flag_name
+	[ -f "${TMP}/${1}" ]
 }
 
-print_vbar()	# vertical bar, from 0 to 100; 1 parameter: vbar_level
-{
+print_vbar() {	# vertical bar, from 0 to 100; 1 parameter: vbar_level
 	case "$(( $1 / 11 ))" in
-		9|8)	echo '█' ;;
-		7)		echo '▇' ;;
-		6)		echo '▆' ;;
-		5)		echo '▅' ;;
-		4)		echo '▄' ;;
-		3)		echo '▃' ;;
-		2)		echo '▂' ;;
-		1)		echo '▁' ;;
-		*)		echo ' ' ;;
+		9)	echo '█' ;;
+		8)	echo '█' ;;
+		7)	echo '▇' ;;
+		6)	echo '▆' ;;
+		5)	echo '▅' ;;
+		4)	echo '▄' ;;
+		3)	echo '▃' ;;
+		2)	echo '▂' ;;
+		1)	echo '▁' ;;
+		*)	echo ' ' ;;
 	esac
 }
 
 # formatting modules for status line
 
-sp_status_separator()
-{
+sp_status_separator() {
 	echo "$SEPARATOR"
 }
 
 # wifi module for status line
 
-show_wifi_toggle()	# 1 parameter: module index
-{
+show_wifi_toggle() {	# 1 parameter: module index
 	toggle_flag "show_wifi"
 	update_now "$1"
 }
 
-wifi_menu()
-{
+wifi_menu() {
 	networkmanager_dmenu
 }
 
-sp_status_wifi()
-{
+sp_status_wifi() {
 	# ICON="${SP}${i_fa_wifi}${SP}"
 	ICON=""
 
@@ -789,41 +702,34 @@ sp_status_wifi()
 
 # sound volume module for status line
 
-volume_get_level()
-{
+volume_get_level() {
 	amixer get Master | sed -n 's/^.*\[\([0-9]\+\)%.*$/\1/p' | head -n 1
 }
 
-volume_get_state()
-{
+volume_get_state() {
 	amixer get Master | sed -n 's/^.*\[\(o[nf]\+\).*$/\1/p' | head -n 1
 }
 
-volume_toggle()			# 1 parameter: module index
-{
+volume_toggle() {			# 1 parameter: module index
 	amixer set Master toggle
 	update_now "$1"
 }
 
-volume_mixer()
-{
+volume_mixer() {
 	terminal -e alsamixer
 }
 
-volume_up()				# 1 parameter: module index
-{
+volume_up() {				# 1 parameter: module index
 	amixer set Master 5%+
 	update_now "$1"
 }
 
-volume_down()			# 1 parameter: module index
-{
+volume_down() {			# 1 parameter: module index
 	amixer set Master 5%-
 	update_now "$1"
 }
 
-sp_status_volume()
-{
+sp_status_volume() {
 	if ! which amixer > /dev/null ; then		# chech if amixer is installed
 		print_status_module "no amixer"
 		exit
@@ -861,14 +767,12 @@ sp_status_volume()
 
 # backlight module for status line
 
-backlight_get_level()
-{
+backlight_get_level() {
 	set -- /sys/class/backlight/*
 	echo "$(( 100 * $(cat ${1}/actual_brightness) / $(cat ${1}/max_brightness) ))"
 }
 
-backlight_down()	# 1 parameter: module index
-{
+backlight_down() {	# 1 parameter: module index
 	if [ "$(backlight_get_level)" -gt 10 ] ; then		# make sure backlight is not too low
 		if which light > /dev/null ; then		# check if light is installed
 			light -U 2
@@ -881,8 +785,7 @@ backlight_down()	# 1 parameter: module index
 	fi
 }
 
-backlight_up()	# 1 parameter: module index
-{
+backlight_up() {	# 1 parameter: module index
 	if which light > /dev/null ; then		# check if light is installed
 		light -A 2
 	elif which xbacklight > /dev/null ; then	# check if xbacklight is installed
@@ -893,8 +796,7 @@ backlight_up()	# 1 parameter: module index
 	update_now "$1"
 }
 
-backlight_menu()	# 1 parameter: module index
-{
+backlight_menu() {	# 1 parameter: module index
 	rofi_menu " ${i_fa_sun_o}" 80 \
 		"100%:100
 		 75%:75
@@ -905,8 +807,7 @@ backlight_menu()	# 1 parameter: module index
 	update_now "$1"
 }
 
-sp_status_backlight()
-{
+sp_status_backlight() {
 	ICON="${SP}${i_fa_sun_o}${SP}"
 
 	if [ -z "$(ls /sys/class/backlight/)" ] ; then	# no backlight
@@ -929,8 +830,7 @@ sp_status_backlight()
 
 # battery module for status line
 
-battery_cmd()
-{
+battery_cmd() {
 	xfce4-power-manager -c
 }
 
@@ -977,16 +877,14 @@ sp_status_battery()
 
 # weather module for status line
 
-weather_notify()	# 1 parameter: location
-{
+weather_notify() {	# 1 parameter: location
 	notify-send -i "weather-clouds" "Weather" "$(weather-report -qm $1)"
 }
 
-sp_status_weather()
-{
+sp_status_weather() {
 #	ICON="${SP}${i_fae_sun_cloud}${SP}"
 	ICON=""
-	LOCATION="mmmm"	# In order to learn what location to use, see `man weather`
+	LOCATION="mmmm"	# See `man weather` about location
 	
 	label="$(weather-report -qm --headers='Temperature' $LOCATION | sed 's/^.*: //;s/ C$/°C/')"
 
@@ -999,22 +897,20 @@ sp_status_weather()
 
 # clock module for status line
 
-show_date_toggle()	# 1 parameter: index module
-{
+show_date_toggle() {	# 1 parameter: index module
 	toggle_flag "show_date"
 	update_now "$1"
 }
 
-calendar_notify()
-{
+calendar_notify() {
 	notify-send \
 		-i calendar \
 		"$(date)" \
-		"$(cal --color=always | sed 's/\x1b\[7m/<b><span background=\"#00BCD4\">/;s/\x1b\[27m/<\/span><\/b>/;s/\t//g')"
+		"$(cal --color=always \
+			| sed 's/\x1b\[7m/<b><span background=\"#00BCD4\">/;s/\x1b\[27m/<\/span><\/b>/;s/\t//g')"
 }
 
-sp_status_clock()
-{
+sp_status_clock() {
 	# ICON_TIME="${SP}${i_fa_clock_o}${SP}"
 	ICON_TIME=""
 	# ICON_DATE="${SP}${i_fa_calendar_o}${SP}"
@@ -1040,9 +936,66 @@ sp_status_clock()
 		%{A1}"
 }
 _EOF_
-fi ;
+fi
 
 . "$HOME/.simplepanelrc" ;  # read configuration file
+
+######################
+# status line module #
+######################
+
+UPD_INT=3	# update interval (in seconds) for status line
+
+sp_status() {
+	status_line_index="$1"
+
+	# create fifo for status line updates
+
+	if [ -e "${TMP}/update_status_now" ] ; then
+		rm "${TMP}/update_status_now"
+	fi
+	mkfifo "${TMP}/update_status_now"
+	
+	IFS='
+	'
+	while true ; do					# start timed status line update
+		echo "all" > "${TMP}/update_status_now" || break
+		sleep "$UPD_INT"
+	done &
+
+	while read index < "${TMP}/update_status_now"; do
+		status_line="$status_line_index:"
+		if [ $index = "all" ] ; then	# update all status modules
+			sp_status_values=""
+			i=0
+			for status_module in $sp_status_modules ; do
+				value="$($status_module $i)"
+				sp_status_values="${sp_status_values}${value}${IFS}"	# store the value
+				status_line="${status_line}${value}"			# add the value to the status line
+				i=$(( $i+1 ))
+			done
+		else				# update one status module
+			set -- $sp_status_modules
+			shift $index
+			new_value="$($1 $index)"
+			set -- $sp_status_values
+			i=0
+			sp_status_values=""
+			while [ $# -gt 0 ] ; do			# read the old values
+				if [ $i -eq $index ] ; then
+					value="$new_value"	# replace the value that updates
+				else
+					value="$1"		# keep all other values
+				fi
+				sp_status_values="${sp_status_values}${value}${IFS}"	# store the value
+				status_line="$status_line$value"			# add the value to the status line
+				i=$(( $i+1 ))
+				shift							# remove old stored value
+			done
+		fi
+		echo "$status_line"
+	done
+}
 
 ##########
 ## MAIN ##
@@ -1051,20 +1004,10 @@ fi ;
 
 #### INITIALIZE PANEL ####
 
-# create directory for temporary files
+# clear directory for temporary files
 
-if ! [ -d "$TMP" ] ; then
-	mkdir "$TMP" ;
-fi ;
-
-TMP="$(mktemp -p $TMP -d XXXXX)/"
-
-# create fifo for status line updates
-
-if [ -e "${TMP}update_status_now" ] ; then
-	rm "${TMP}update_status_now" ;
-fi ;
-mkfifo "${TMP}update_status_now" ;
+rm -rf "$TMP"
+mkdir "$TMP"
 
 # set initial empty values
 
@@ -1073,42 +1016,46 @@ for module in $sp_modules ; do
 " ;
 done ;
 
+# handle panel exit
+
+trap \
+"rm -rf $TMP ; \
+bspc config top_padding -$gap" \
+EXIT INT QUIT TERM
+
 # start modules in the background and pipe them to the panel
 
-index=0 ;
+index=0
 for module in $sp_modules ; do
-	"$module" "$index" &
-	index=$(( $index+1 )) ;
-	sleep "${DELAY}" ;
+	eval "$module $index" &
+	index=$(( $index+1 ))
+	sleep "${DELAY}"
 done \
-| { 
-
-#### UPDATE PANEL ####
-
-IFS='
-' ;					# needed to preserve initial and final spaces
+| {	#### UPDATE PANEL ####
+	IFS='
+'					# IFS needed to preserve initial and final spaces
 	while read line ; do		# update panel every time a module prints a line
-		index="${line%%:*}" ;	# get index of the module that needs update
-		new_value="${line#*:}" ;	# get new value of the module that needs update
-		set -- $sp_values ;	# set positional parameters to the old values
-		sp_values="" ;		# initial set of new values
-		panel_line="" ;
-		i=0 ;
-		while [ $# -gt 0 ] ; do				# read the old values
+		index="${line%%:*}"	# get index of the module that needs update
+		new_value="${line#*:}"	# get new value of the module that needs update
+		set -- $sp_values	# set positional parameters to the old values
+		sp_values=""		# initial set of new values
+		panel_line=""
+		i=0
+		while [ $# -gt 0 ] ; do			# read the old values
 			if [ $i -eq $index ] ; then
-				value="$new_value" ;		# replace the value that updates
+				value="$new_value"	# replace the value that updates
 			else
-				value="$1" ;			# keep all other values
+				value="$1"		# keep all other values
 			fi
-			sp_values="$sp_values$value$IFS" ;	# store the new value
-			panel_line="$panel_line$value" ;	# and add it to the panel line
-			i=$(( $i+1 )) ;
-			shift ;
-		done ;
-		echo "$panel_line" ;	# print the panel line to update lemonbar
-		sleep "${DELAY}" ;
-	done ;
-} | lemonbar \
+			sp_values="$sp_values$value$IFS"	# store the new value
+			panel_line="$panel_line$value"		# and add it to the panel line
+			i=$(( $i+1 ))
+			shift
+		done
+		echo "$panel_line"	# print the panel line to update lemonbar
+		sleep "$DELAY"
+	done ; } \
+| lemonbar \
 	-a 50 \
 	-g "${SP_WIDTH}x${SP_HEIGHT}${SP_POSITION}" \
 	-f "$SP_FONT_1" -o "$SP_OFFSET_1" \
@@ -1119,4 +1066,4 @@ IFS='
 	"$SP_BOTTOM" \
 | while read line ; do
 	eval "$line"	# execute commands for clickable areas of lemonbar
-done ;
+done
