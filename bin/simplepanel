@@ -1020,6 +1020,9 @@ sp_status() {
 ## MAIN ##
 ##########
 
+# new line character
+NL='
+'
 
 #### INITIALIZE PANEL ####
 
@@ -1029,18 +1032,17 @@ rm -rf "$TMP"
 mkdir "$TMP"
 
 # set initial empty values
-
+sp_values=""
 for module in $sp_modules ; do
-	sp_values="$sp_values 
-" ;
-done ;
+	sp_values="$sp_values $NL"
+done
 
 # handle panel exit
 
 trap \
-"rm -rf $TMP ; \
-bspc config top_padding -$gap" \
-EXIT INT QUIT TERM
+	"rm -rf $TMP ; \
+	bspc config top_padding -$gap" \
+	EXIT INT QUIT TERM
 
 # start modules in the background and pipe them to the panel
 
@@ -1048,31 +1050,27 @@ index=0
 for module in $sp_modules ; do
 	eval "$module $index" &
 	index=$(( $index+1 ))
-	sleep "${DELAY}"
+#	sleep "${DELAY}"
 done \
 | {	#### UPDATE PANEL ####
-	IFS='
-'					# IFS needed to preserve initial and final spaces
+	IFS="$NL"					# IFS needed to preserve initial and final spaces
 	while read line ; do		# update panel every time a module prints a line
-		index="${line%%:*}"	# get index of the module that needs update
-		new_value="${line#*:}"	# get new value of the module that needs update
-		set -- $sp_values	# set positional parameters to the old values
-		sp_values=""		# initial set of new values
+		index="${line%%:*}"		# get index of the module that needs update
+		[ "$index" = "$line" ] && continue	# skip lines with wrong format
+		sp_old_values="$sp_values"
+		sp_values=""			# initial set of new values
 		panel_line=""
 		i=0
-		while [ $# -gt 0 ] ; do			# read the old values
-			if [ $i -eq $index ] ; then
-				value="$new_value"	# replace the value that updates
-			else
-				value="$1"		# keep all other values
+		for value in $sp_old_values ; do
+			if [ "$i" = "$index" ] ; then
+				value="${line#*:}"	# replace the value that updates with new value
 			fi
-			sp_values="$sp_values$value$IFS"	# store the new value
+			sp_values="$sp_values$value$NL"		# store the new value
 			panel_line="$panel_line$value"		# and add it to the panel line
 			i=$(( $i+1 ))
-			shift
 		done
-		echo "$panel_line"	# print the panel line to update lemonbar
-		sleep "$DELAY"
+		echo "$panel_line"		# print the panel line to update lemonbar
+#		sleep "$DELAY"
 	done ; } \
 | lemonbar \
 	-a 50 \
