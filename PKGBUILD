@@ -21,7 +21,8 @@ optdepends=('terminus-font: default font'
 	'alsa-utils: sound volume info'
 	'weather: weather info'
 	'mpc: mpd info'
-	'xdotool: menu placement')
+	'xdotool: menu placement, window actions'
+	'xprop: desktops info')
 makedepends=('git')
 source=("git://github.com/kainonergon/$pkgname")
 md5sums=('SKIP')
