@@ -242,7 +242,7 @@ sp_button_maximize() {
 sp_button_close() {
 	button	"$1" \
 		"1" \
-		"xdo close" \
+		"xdotool getactivewindow windowclose" \
 		"${SP}${i_fa_close}" \
 		""
 }
