@@ -252,21 +252,19 @@ sp_button_close() {
 rofi_cmd() {	# 1 parameter: menu_width. The rest of parameters is passed to rofi
 	menu_width="$1"	# width in pixels
 	shift
-	X_MAX="$(wattr w $(lsw -r))"
-	Y_MAX="$(wattr h $(lsw -r))"
-
+	eval "$(xdotool search --limit 1 --maxdepth 0 --class '' getwindowgeometry --shell)"	# get screen size
 	eval "$(xdotool getmouselocation --shell)"
 
-	if [ $X -lt $(( $X_MAX - $menu_width )) ] ; then
+	if [ $X -lt $(( $WIDTH - $menu_width )) ] ; then
 		x_anchor="west"
 	else
 		x_anchor="east"
-		X="$X_MAX"
+		X="$WIDTH"
 	fi
 
 	if [ "$SP_BOTTOM" ] ; then	# panel at the bottom
 		y_anchor="south"
-		Y="$(( $Y_MAX - $SP_HEIGHT ))"
+		Y="$(( $HEIGHT - $SP_HEIGHT ))"
 	else				# panel at the top
 		y_anchor="north"
 		Y="$SP_HEIGHT"
@@ -428,7 +426,7 @@ sp_bspwm() {
 }
 
 # desktops module for EWMH/NetWM compatible X Window Manager
-# tested with bspwm, jwm, icewm, pekwm, hlwm, openbox, fluxbox, awesome
+# tested with bspwm, jwm, icewm, pekwm, hlwm, openbox, blackbox, fluxbox, awesome, xfwm4
 
 dt_next() {
 	xdotool set_desktop --relative 1
@@ -438,42 +436,64 @@ dt_prev() {
 	xdotool set_desktop --relative -- -1
 }
 
+dt_set() {
+	xdotool set_desktop $1
+}
+
 sp_desktops() {
 	pkill -x xprop >/dev/null 2>&1
-
+	NL='
+'
 	module_index="$1"
-	
 	# check what X properties are supported by wm
-	xprop_list="_NET_ACTIVE_WINDOW _NET_DESKTOP_NAMES _NET_CURRENT_DESKTOP _WIN_WORKSPACE_NAMES _WIN_WORKSPACE"
+	xprop_list="_NET_NUMBER_OF_DESKTOPS \
+		_WIN_WORKSPACE_COUNT \
+		_NET_CURRENT_DESKTOP \
+		_WIN_WORKSPACE \
+		_NET_DESKTOP_NAMES \
+		_WIN_WORKSPACE_NAMES \
+		_NET_ACTIVE_WINDOW"
 	xprop_query=""
 	for prop in $xprop_list ; do
-		{ xprop -root -notype _NET_SUPPORTED _WIN_PROTOCOLS | grep -q "$prop" ; } && xprop_query="$xprop_query $prop"
+		{ xprop -root -notype _NET_SUPPORTED _WIN_PROTOCOLS 2>/dev/null | grep -q -s "$prop" 2>/dev/null; } && xprop_query="$xprop_query $prop"
 	done
-	dt_names=""
-	dt_current=0
-	xprop -spy -root -notype $xprop_query \
-	| while read line; do
-		case "${line%% = *}" in
-			_NET_DESKTOP_NAMES|\
-			_WIN_WORKSPACE_NAMES)
-				dt_names="${line#* = }" ;;
+	xprop -spy -root -notype $xprop_query 2>/dev/null \
+	| while unset IFS; read xprop_name eq_sign xprop_value; do
+		case "$xprop_name" in
+			_NET_NUMBER_OF_DESKTOPS|\
+			_WIN_WORKSPACE_COUNT)
+				dt_max_num="$xprop_value" ;;
 			_NET_CURRENT_DESKTOP|\
 			_WIN_WORKSPACE)
-				dt_current="${line#* = }" ;;
+				dt_current="$xprop_value" ;;
+			_NET_DESKTOP_NAMES|\
+			_WIN_WORKSPACE_NAMES)
+				dt_names=""
+				i=1
+				IFS=','
+				for dt in $xprop_value ; do
+					dt="${dt#*\"}"; dt="${dt%\"}"	# remove ""
+					[ "$dt" ] || dt="$i"	# use number (starting from 1) if name is not set
+					dt_names="$dt_names$dt$NL"
+					i=$(($i+1))
+				done ;;
 		esac
+		IFS="$NL"
+		set -- $dt_names
 		dt_line=""
 		dt_number=0
-		IFS=','
-		for dt in $dt_names ; do
-			dt="${dt#*\"}"; dt="${dt%\"}"	# remove ""
+		while [ $dt_number -lt $dt_max_num ] ; do
+			dt="$1"
+			[ "$dt" ] || dt="$(($dt_number+1))"	# use number (starting from 1) if there are more desktops than names
 			if [ $dt_number -eq $dt_current ] ; then
 				dt_line="${dt_line}${BC1}${SP}${dt}${SP}${BC}"
 			else	# check if desktop is occupied
 				if [ $(xdotool search --desktop $dt_number --limit 1 --class "") ] ; then
-					dt_line="${dt_line}%{A1:wmctrl -s $dt_number:}${SP}${dt}${SP}%{A1}"
+					dt_line="${dt_line}%{A1:dt_set $dt_number:}${SP}${dt}${SP}%{A1}"
 				fi
 			fi
 			dt_number=$(($dt_number+1))
+			[ $# -gt 0 ] && shift
 		done
 		print_module "$module_index" \
 			"%{A4:dt_next:}
