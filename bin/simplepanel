@@ -457,6 +457,9 @@ sp_desktops() {
 	for prop in $xprop_list ; do
 		{ xprop -root -notype _NET_SUPPORTED _WIN_PROTOCOLS 2>/dev/null | grep -q -s "$prop" 2>/dev/null; } && xprop_query="$xprop_query $prop"
 	done
+	dt_max_num=1
+	dt_current=0
+	dt_names=""	
 	xprop -spy -root -notype $xprop_query 2>/dev/null \
 	| while unset IFS; read xprop_name eq_sign xprop_value; do
 		case "$xprop_name" in
