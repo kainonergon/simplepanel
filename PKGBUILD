@@ -10,7 +10,7 @@ license=('MIT')
 depends=('dash'
 	'lemonbar-xft')
 optdepends=('terminus-font: default font'
-	'ttf-nerd-fonts-knack-complete-git: default font'
+	'ttf-nerd-fonts-hack-complete-git: default font'
 	'rofi: default menu'
 	'wireless_tools: wifi info'
 	'xtitle: window title info'

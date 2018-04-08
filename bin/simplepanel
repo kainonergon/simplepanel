@@ -39,14 +39,14 @@ TMP="/tmp/simplepanel"
 
 SP_FONT_1="-xos4-terminus-medium-r-normal--18-*-*-*-*-*-iso10646-1"	# main font
 SP_OFFSET_1=0
-SP_FONT_2="Knack Nerd Font:pixelsize=16"	# iconic font
+SP_FONT_2="Hack Nerd Font:pixelsize=16"	# iconic font
 SP_OFFSET_2=0
 SP_FONT_3="mono:pixelsize=16"	# extra font
 SP_OFFSET_3=0
 
-# SP_FONT_1="Knack Nerd Font:pixelsize=16"	# main font
+# SP_FONT_1="Hack Nerd Font:pixelsize=16"	# main font
 # SP_OFFSET_1=-2
-# SP_FONT_2="Knack Nerd Font:pixelsize=16"	# iconic font
+# SP_FONT_2="Hack Nerd Font:pixelsize=16"	# iconic font
 # SP_OFFSET_2=-2
 # SP_FONT_3="-misc-font logos-medium-r-normal--22-*-*-*-p-*-iso10646-1"	# extra font
 # SP_OFFSET_3=0
