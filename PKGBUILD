@@ -24,7 +24,7 @@ optdepends=('terminus-font: default font'
 	'xdotool: menu placement, window actions'
 	'xprop: desktops info')
 makedepends=('git')
-source=("git://github.com/kainonergon/$pkgname")
+source=("$pkgname::git+https://github.com/kainonergon/$pkgname")
 md5sums=('SKIP')
 
 pkgver() {
