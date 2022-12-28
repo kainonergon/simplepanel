@@ -894,7 +894,7 @@ sp_status_battery()
 
 	if [ "$battery_stat" = "Charging" ] ; then
 		icon="$ICON_C"
-		label="${SP}${battery_cap}%"
+		label="${SP}${battery_cap}%%"
 	else
 		case $(( ${battery_cap} / 21 )) in
 			0)	icon="$ICON_0" ;;
@@ -904,7 +904,7 @@ sp_status_battery()
 			4)	icon="$ICON_4" ;;
 		esac
 		if [ "$battery_cap" -lt 97 ] ; then
-			label="${SP}${battery_cap}%"
+			label="${SP}${battery_cap}%%"
 		else
 			label=""
 		fi
